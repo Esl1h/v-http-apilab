@@ -1,0 +1,65 @@
+name: release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  linux-amd64:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build binary with the pinned V toolchain
+        run: |
+          # Same builder stage as the project Dockerfile: the compiler is
+          # fetched at the exact pinned commit, and the V version is baked
+          # into /version at build time.
+          docker build --target builder -t v-http-lab-builder .
+          cid="$(docker create v-http-lab-builder)"
+          docker cp "${cid}":/out/v-http-lab ./v-http-lab-linux-amd64
+          docker rm "${cid}" >/dev/null
+
+      - name: Verify the binary and record checksums
+        run: |
+          chmod +x v-http-lab-linux-amd64
+          file v-http-lab-linux-amd64
+          ldd v-http-lab-linux-amd64 || true
+          sha256sum v-http-lab-linux-amd64 > SHA256SUMS
+
+      - name: Smoke test the binary
+        run: |
+          PORT=18080 LAB_ADMIN_TOKEN=ci-token ./v-http-lab-linux-amd64 &
+          pid=$!
+          for _ in $(seq 1 50); do
+            curl -sf -m 1 http://127.0.0.1:18080/health >/dev/null && break
+            sleep 0.2
+          done
+          curl -sf -m 2 http://127.0.0.1:18080/health
+          curl -sf -m 2 http://127.0.0.1:18080/openapi.json >/dev/null
+          kill "${pid}"
+
+      - name: Attach to the GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            v-http-lab-linux-amd64
+            SHA256SUMS
+          body: |
+            Binário linux-amd64 pré-compilado com o toolchain V fixado
+            (commit do compilador gravado em `/version`).
+
+            Dinâmico, linkado à glibc (Debian bookworm, glibc 2.36): use em
+            distribuições com glibc >= 2.36 (Debian 12+, Ubuntu 23.04+,
+            Fedora 38+, Arch etc.) ou na imagem `debian:bookworm-slim`.
+
+            Uso direto:
+            ```
+            ./v-http-lab-linux-amd64   # PORT=8080 por padrão, bind 0.0.0.0
+            ```
+            Verifique a integridade com `sha256sum -c SHA256SUMS`.
