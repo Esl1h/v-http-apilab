@@ -1,0 +1,20 @@
+# Isolated v-http-lab backend for local tests.
+services:
+  v-http-lab:
+    build: .
+    image: v-http-lab:latest
+    container_name: v-http-lab
+    ports:
+      - "8080:8080"
+    environment:
+      PORT: "8080"
+      MAX_BODY_BYTES: "1048576"
+      READ_TIMEOUT_MS: "30000"
+      MAX_SLOW_MS: "10000"
+      MAX_LARGE_BYTES: "1048576"
+      LOG_LEVEL: "info"
+      # Set LAB_ADMIN_TOKEN to enable the /lab/calls evidence endpoints:
+      # LAB_ADMIN_TOKEN: "change-me-lab-token"
+      # Force /ready to answer 503 (readiness drill):
+      # READY_FORCE_FAIL: "1"
+    restart: unless-stopped

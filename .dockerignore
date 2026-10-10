@@ -1,0 +1,12 @@
+# Only v.mod and src/ are needed to build the image.
+.git
+bin
+tests
+scripts
+docs
+Makefile
+README.md
+docker-compose.yml
+Dockerfile
+.dockerignore
+.gitignore
