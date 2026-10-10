@@ -80,6 +80,35 @@ runtime é `debian:bookworm-slim` (o binário é dinâmico, linkado à glibc;
 como usuário não-root (uid 10001) e há um `HEALTHCHECK` apontando para
 `/health`.
 
+## Releases e imagem de runtime (binário, sem compilar)
+
+Cada tag `v*` dispara o workflow `.github/workflows/release.yml`: ele
+compila com o mesmo toolchain fixado (estágio `builder` do Dockerfile),
+testa o binário e o anexa ao release do GitHub junto com `SHA256SUMS`.
+
+```sh
+gh release download v1.0.0 --repo Esl1h/v-http-lab   # v-http-lab-linux-amd64 + SHA256SUMS
+sha256sum -c SHA256SUMS
+./v-http-lab-linux-amd64
+```
+
+O binário é dinâmico, linkado à glibc (compilado em Debian bookworm,
+glibc 2.36): use em distribuições com glibc >= 2.36 ou na imagem
+`debian:bookworm-slim`.
+
+Para um Docker que não compila nada, use a imagem de runtime, que baixa o
+binário do release fixado por tag e checksum (build em segundos):
+
+```sh
+docker build -f Dockerfile.runtime -t v-http-lab:latest .
+docker run --rm -p 8080:8080 v-http-lab:latest
+```
+
+`Dockerfile` (compila do código com o toolchain fixado) e
+`Dockerfile.runtime` (usa o binário do release com verificação de
+integrity) produzem o mesmo servidor; escolha conforme preferir
+reprodutibilidade total do build ou velocidade.
+
 ## Endpoints
 
 Resumo; contrato completo em `docs/endpoints.md`.
@@ -207,8 +236,10 @@ veb, ver limitações): `grep '^{'`.
 ```
 v-http-lab/
 ├── Dockerfile               build multi-stage com o compilador fixado por commit
+├── Dockerfile.runtime       imagem que usa o binário do release (com checksum)
 ├── docker-compose.yml       backend isolado para teste local
 ├── Makefile                 atalhos (build, run, test, docker, fmt, clean)
+├── .github/workflows/       release.yml: tag v* -> binário + SHA256SUMS no release
 ├── v.mod                    módulo (base_url: src)
 ├── scripts/                 build.sh, run.sh, test-smoke.sh, test-errors.sh, test-limits.sh
 ├── tests/                   lib.sh + grupos: infra, auth, users, search-reports,
