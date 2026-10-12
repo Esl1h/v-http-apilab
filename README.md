@@ -117,7 +117,7 @@ reproducibility or speed.
 
 ## Endpoints
 
-Summary; the full contract is in `docs/endpoints.md` (in Portuguese).
+Summary; the full contract is in `docs/endpoints.md`.
 
 | Group | Endpoint | Method | Description |
 | --- | --- | --- | --- |
@@ -319,5 +319,6 @@ Avisos:
   deve ser exposta a redes não controladas.
 - Existe um port em Rust do mesmo conceito:
   [rs-http-apilab](https://github.com/Esl1h/rs-http-apilab).
-- A documentação completa do contrato (`docs/endpoints.md` e
-  `docs/testing.md`) está em português.
+- A documentação completa do contrato (`docs/endpoints.md`,
+  `docs/testing.md` e a especificação OpenAPI) está em inglês; este
+  resumo em português é a visão geral.

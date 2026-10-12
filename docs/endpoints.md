@@ -1,260 +1,275 @@
-# Contrato dos endpoints
+# Endpoint contract
 
-Convenções gerais:
+General conventions:
 
-- Respostas de sucesso são `application/json`, exceto onde indicado
-  (`/metrics`, downloads CSV, arquivos estáticos e os utilitários de texto).
-- Toda resposta carrega o header `X-Request-ID`: o valor recebido no header
-  de mesmo nome (se válido: 1 a 128 caracteres ASCII imprimíveis) ou um UUID
-  v4 gerado. Erros também o incluem no corpo.
-- Header opcional `X-Test-Case`: rotula a requisição no log estruturado e no
-  buffer `/lab/calls`.
-- Toda resposta de erro usa o formato:
+- Success responses are `application/json`, except where noted
+  (`/metrics`, CSV downloads, static files and the text utilities).
+- Every response carries the `X-Request-ID` header: the value received
+  in the header of the same name (when valid: 1 to 128 printable ASCII
+  characters) or a generated UUID v4. Errors also include it in the
+  body.
+- Optional `X-Test-Case` header: labels the request in the structured
+  log and in the `/lab/calls` buffer.
+- Every error response uses the format:
 
 ```json
 {"error":{"code":"...","message":"...","request_id":"..."}}
 ```
 
-- Códigos transversais: `400` sintaxe inválida, `401` credencial ausente ou
-  inválida, `403` credencial conhecida e recusada, `404` rota/recurso
-  inexistente, `405` método não permitido (com header `Allow`), `413` corpo
-  acima de `MAX_BODY_BYTES`, `415` Content-Type inesperado, `422` corpo
-  válido porém semanticamente inválido.
-- Métodos não cobertos por rota nenhuma (por exemplo `TRACE`, `PROPFIND`)
-  recebem o mesmo tratamento: 405 com `Allow` quando o path existe para
-  outro método, ou 404; em ambos os casos a requisição é logada e gravada no
-  buffer `/lab/calls`.
+- Cross-cutting codes: `400` invalid syntax, `401` missing or invalid
+  credential, `403` known but refused credential, `404` non-existent
+  route/resource, `405` method not allowed (with `Allow` header), `413`
+  body above `MAX_BODY_BYTES`, `415` unexpected Content-Type, `422`
+  valid body that is semantically invalid.
+- Methods not covered by any route (for example `TRACE`, `PROPFIND`)
+  get the same treatment: 405 with `Allow` when the path exists for
+  another method, or 404; in both cases the request is logged and
+  recorded in the `/lab/calls` buffer.
 
 ## Infra
 
 ### GET /health
-Liveness. Sempre `200` com `{"status":"ok"}`.
+Liveness. Always `200` with `{"status":"ok"}`.
 
 ### GET /ready
-Readiness. `200` com `{"status":"ready"}`; `503` com `{"status":"unavailable"}`
-quando a env `READY_FORCE_FAIL` tem qualquer valor não vazio.
+Readiness. `200` with `{"status":"ready"}`; `503` with
+`{"status":"unavailable"}` when the `READY_FORCE_FAIL` env has any
+non-empty value.
 
 ### GET /version
-`200` com `{"app","version","v_version","build_date","deterministic_seed"}`.
-`v_version` é gravado em tempo de build pelo `scripts/build.sh` e pelo
-Dockerfile (`unknown` quando não fornecido). `build_date` vem do comptime
-`@BUILD_DATE` (reproduzível com `SOURCE_DATE_EPOCH`).
+`200` with `{"app","version","v_version","build_date","deterministic_seed"}`.
+`v_version` is baked at build time by `scripts/build.sh` and by the
+Dockerfile (`unknown` when not provided). `build_date` comes from the
+`@BUILD_DATE` comptime value (reproducible with `SOURCE_DATE_EPOCH`).
 
 ### GET /metrics
-Texto Prometheus (Content-Type `text/plain; version=0.0.4; charset=utf-8`):
-`v_http_lab_up`, `v_http_lab_uptime_seconds`, `v_http_lab_build_info` e
-`v_http_lab_requests_total{route,status}` por rota (padrão como
-`/api/v1/users/:id` ou `unmatched`) e status.
+Prometheus text (Content-Type `text/plain; version=0.0.4;
+charset=utf-8`): `v_http_lab_up`, `v_http_lab_uptime_seconds`,
+`v_http_lab_build_info` and `v_http_lab_requests_total{route,status}`
+per route (patterns such as `/api/v1/users/:id` or `unmatched`) and
+status.
 
 ### GET /openapi.json
-A especificação OpenAPI 3.0.3 completa desta API, em `application/json`.
-O documento (`src/openapi/openapi.json`) é embutido no binário em tempo de
-compilação: não há leitura de disco.
+The complete OpenAPI 3.0.3 specification of this API, as
+`application/json`. The document (`src/openapi/openapi.json`) is
+embedded in the binary at compile time: there is no disk read.
 
 ### GET /docs
-Página HTML com o Swagger UI apontando para `/openapi.json`. Os recursos da
-interface (CSS/JS) são carregados de CDN, portanto renderizar a página exige
-acesso à internet no navegador; a API em si é autocontida.
+HTML page with Swagger UI pointing at `/openapi.json`. The UI assets
+(CSS/JS) are loaded from a CDN, so rendering the page requires internet
+access in the browser; the API itself is self-contained.
 
-## Autenticação (simulada)
+## Authentication (simulated)
 
 ### POST /api/v1/auth/login
-Body JSON `{"username","password"}`. Erros: `415` sem JSON, `400` JSON
-inválido, `422` campo ausente, `401` credenciais erradas (`invalid_credentials`).
-Sucesso `200`: `{"token","token_type":"Bearer","expires_in":3600,"username",`
-`"request_id"}`. A senha nunca é logada nem devolvida. Credenciais padrão:
-`LAB_USERNAME`/`LAB_PASSWORD`.
+JSON body `{"username","password"}`. Errors: `415` without JSON, `400`
+invalid JSON, `422` missing field, `401` wrong credentials
+(`invalid_credentials`). Success `200`: `{"token","token_type":"Bearer",
+"expires_in":3600,"username","request_id"}`. The password is never
+logged or returned. Default credentials: `LAB_USERNAME`/
+`LAB_PASSWORD`.
 
 ### POST /api/v1/auth/logout
-Exige `Authorization: Bearer <token>`. `200` `{"logged_out":true,...}`;
-`401` sem token ou token desconhecido. Body opcional e ignorado.
+Requires `Authorization: Bearer <token>`. `200`
+`{"logged_out":true,...}`; `401` without a token or with an unknown
+token. Body is optional and ignored.
 
 ### GET /api/v1/auth/me
-Exige `Authorization: Bearer <token>` válido e não expirado. `200` com o
-perfil sintético `{"username","display_name","role","email","request_id"}`;
-`401` caso contrário.
+Requires a valid, unexpired `Authorization: Bearer <token>`. `200`
+with the synthetic profile `{"username","display_name","role","email",
+"request_id"}`; `401` otherwise.
 
-## Usuários
+## Users
 
 ### GET /api/v1/users
-Query: `page` (default 1, mínimo 1), `per_page` (default 20, 1..100),
-`department` (filtro exato opcional). `200` com
-`{"page","per_page","total","total_pages","items":[User]}`. Erros: `400`
-valores não numéricos, `422` fora dos limites (inclusive página além da
-última). `User`: `{"id","name","email","department","role"}`.
+Query: `page` (default 1, minimum 1), `per_page` (default 20, 1..100),
+`department` (optional exact filter). `200` with
+`{"page","per_page","total","total_pages","items":[User]}`. Errors:
+`400` non-numeric values, `422` out of range (including a page beyond
+the last). `User`: `{"id","name","email","department","role"}`.
 
 ### GET /api/v1/users/{id}
-`id` numérico positivo. `200` com o usuário; `400` id inválido; `404`
-inexistente.
+`id` positive numeric. `200` with the user; `400` invalid id; `404`
+not found.
 
 ### POST /api/v1/users
-Body JSON `{"name" (1..100),"email" (sintaxe user@dominio.tld, até 254),`
-`"department" (1..50),"role" (admin|operator|viewer)}`. `201` com o usuário
-criado (ids a partir de 26). Erros: `415`, `400`, `422` (todas as falhas de
-campo listadas em `message`).
+JSON body `{"name" (1..100),"email" (user@domain.tld syntax, up to
+254),"department" (1..50),"role" (admin|operator|viewer)}`. `201` with
+the created user (ids start at 26). Errors: `415`, `400`, `422` (all
+field failures listed in `message`).
 
 ### PUT /api/v1/users/{id}
-Substituição completa; mesma validação do POST. `200` com o usuário
-atualizado; `404` inexistente; `400/415/422` como no POST.
+Full replacement; same validation as POST. `200` with the updated
+user; `404` not found; `400/415/422` as in POST.
 
 ### PATCH /api/v1/users/{id}
-Body JSON com qualquer subconjunto de `name`, `email`, `department`, `role`.
-Campos desconhecidos e valores não string são `422`; patch vazio é `422`;
-`404` inexistente; `415`/`400` como nos demais.
+JSON body with any subset of `name`, `email`, `department`, `role`.
+Unknown fields and non-string values are `422`; an empty patch is
+`422`; `404` not found; `415`/`400` as in the others.
 
 ### DELETE /api/v1/users/{id}
-`204` sem corpo em sucesso; `404` inexistente; `400` id inválido.
+`204` with no body on success; `404` not found; `400` invalid id.
 
-## Busca
+## Search
 
 ### GET /api/v1/search
-Query: `q` (obrigatória, até 256 caracteres) e `limit` (default 10, 1..50).
-`200` com `{"query","limit","results":[{"type","id","title"}]}` sobre o corpus
-sintético (usuários, relatórios e documentos). Erros: `422` sem `q` ou limites
-inválidos, `400` tamanho ou número inválidos.
+Query: `q` (required, up to 256 characters) and `limit` (default 10,
+1..50). `200` with `{"query","limit","results":[{"type","id","title"}]}`
+over the synthetic corpus (users, reports and documents). Errors: `422`
+without `q` or with invalid limits, `400` invalid size or number.
 
-## Relatórios
+## Reports
 
 ### GET /api/v1/reports
-`200` `{"count":6,"items":[{"report_id","title","category","rows",`
-`"generated_at"}]}` do catálogo fixo `rep-001..rep-006`.
+`200` `{"count":6,"items":[{"report_id","title","category","rows",
+"generated_at"}]}` from the fixed catalog `rep-001..rep-006`.
 
 ### POST /api/v1/reports/export
-Body JSON `{"report_id","format"}` com `format` em `csv|json`. `202` com
-`{"job_id":"job-N","status":"queued","report_id","format","request_id"}`.
-Erros: `415`, `400`, `422` (campos ausentes/formato inválido), `404`
-relatório desconhecido. Nada é realmente executado; o job fica listado em
-`/internal/debug`.
+JSON body `{"report_id","format"}` with `format` in `csv|json`. `202`
+with `{"job_id":"job-N","status":"queued","report_id","format",
+"request_id"}`. Errors: `415`, `400`, `422` (missing fields/invalid
+format), `404` unknown report. Nothing actually runs; the job is
+listed in `/internal/debug`.
 
 ### GET /api/v1/reports/{id}/download
-`200` com CSV sintético (`text/csv`, `Content-Disposition: attachment`), uma
-linha `region,label,value` e `rows` linhas determinísticas. `404` para id
-desconhecido.
+`200` with synthetic CSV (`text/csv`, `Content-Disposition:
+attachment`), one `region,label,value` header line and `rows`
+deterministic rows. `404` for an unknown id.
 
 ## Tickets
 
 ### POST /api/v1/tickets
-Body JSON `{"title" (1..120),"description" (0..2000),"severity"`
-`(low|medium|high|critical),"tags" (até 10, cada até 40)}`. `201` com o
-ticket (ids a partir de 4; seed tem 3). Erros: `415`, `400`, `422` com todas
-as violações listadas.
+JSON body `{"title" (1..120),"description" (0..2000),"severity"`
+`(low|medium|high|critical),"tags" (up to 10, each up to 40)}`. `201`
+with the ticket (ids start at 4; the seed has 3). Errors: `415`, `400`,
+`422` with all violations listed.
 
 ### GET /api/v1/tickets/{id}
-`200` com o ticket; `400` id inválido; `404` inexistente.
+`200` with the ticket; `400` invalid id; `404` not found.
 
 ## Forms
 
 ### POST /api/v1/forms/feedback
-Content-Type obrigatório `application/x-www-form-urlencoded`. Campos:
-`rating` (inteiro 1..5, obrigatório), `name` (até 100), `comment` (até 500),
-`email` (até 254). `200` ecoa os valores com escape JSON correto
-`{"received":true,"name","rating","comment","email","request_id"}`. Erros:
-`415`, `400` (rating não numérico), `422` (rating ausente/fora da faixa,
-campos longos demais).
+Content-Type must be `application/x-www-form-urlencoded`. Fields:
+`rating` (integer 1..5, required), `name` (up to 100), `comment` (up to
+500), `email` (up to 254). `200` echoes the values with correct JSON
+escaping `{"received":true,"name","rating","comment","email",
+"request_id"}`. Errors: `415`, `400` (non-numeric rating), `422`
+(missing/out-of-range rating, fields too long).
 
-## Integrações
+## Integrations
 
 ### POST /api/v1/webhooks/receive
-Qualquer Content-Type; body até `MAX_BODY_BYTES`. `200` com o resumo
-`{"received_bytes","content_type","json_valid","top_level_keys",`
-`"body_sha256","stored":false,"request_id"}`. Chaves de nível superior
-(apenas objetos JSON) vêm ordenadas; o conteúdo do body nunca é ecoado.
+Any Content-Type; body up to `MAX_BODY_BYTES`. `200` with the summary
+`{"received_bytes","content_type","json_valid","top_level_keys",
+"body_sha256","stored":false,"request_id"}`. Top-level keys (JSON
+objects only) come sorted; the body content is never echoed.
 
 ### POST /api/v1/graphql
-Stub documentado; não executa GraphQL. Body JSON
-`{"query" (string 1..2048, obrigatória),"variables" (objeto, opcional, até 64`
-`chaves)}`. `200` fixo:
+Documented stub; does not run GraphQL. JSON body
+`{"query" (string 1..2048, required),"variables" (object, optional, up
+to 64 keys)}`. Fixed `200`:
 
 ```json
 {"data":{"lab":"ok"},"errors":[],"extensions":{"query_length":N,
- "variables_count":N,"variables_keys":[...],"request_id":"..."}}
+  "variables_count":N,"variables_keys":[...],"request_id":"..."}}
 ```
 
-Erros: `415`, `400` (JSON inválido), `422` (forma errada).
+Errors: `415`, `400` (invalid JSON), `422` (wrong shape).
 
-## Arquivos
+## Files
 
 ### POST /api/v1/files/upload
-Aceita `multipart/form-data` (part `file`, não vazia) ou
-`application/octet-stream` (com query `?name=`). `201` com
-`{"filename" (sanitizado),"size","content_type","sha256","stored":false,`
-`"request_id"}`. O nome é reduzido ao basename com apenas `[A-Za-z0-9._-]`
-(outros viram `_`; vazio vira `upload.bin`; limite 128). Nada é gravado em
-disco. Erros: `415` outro Content-Type, `422` sem part/sem nome/body vazio.
+Accepts `multipart/form-data` (part `file`, non-empty) or
+`application/octet-stream` (with `?name=`). `201` with
+`{"filename" (sanitized),"size","content_type","sha256","stored":false,
+"request_id"}`. The name is reduced to its basename with only
+`[A-Za-z0-9._-]` (others become `_`; empty becomes `upload.bin`; limit
+128). Nothing is written to disk. Errors: `415` other Content-Type,
+`422` missing part/missing name/empty body.
 
 ### GET /static/{name}
-Serve somente a allowlist embutida: `robots.txt`, `style.css`, `logo.svg`,
-`data.csv` (com seus Content-Types e `X-Content-Type-Options: nosniff`).
-`404` fora da lista. Segmentos com barra invertida, barra ou NUL recebem
-`400` `path_traversal_rejected`; dot-segments (`..`, `%2e%2e`) são
-normalizados pelo parser de URL antes do roteamento (nunca alcançam a
-allowlist).
+Serves only the embedded allowlist: `robots.txt`, `style.css`,
+`logo.svg`, `data.csv` (with their Content-Types and
+`X-Content-Type-Options: nosniff`). `404` outside the list. Segments
+with backslash, slash or NUL get `400` `path_traversal_rejected`;
+dot segments (`..`, `%2e%2e`) are normalized by the URL parser before
+routing (they never reach the allowlist).
 
-## Administração (simulada)
+## Administration (simulated)
 
 ### GET /admin/status
-`200` com contadores não sensíveis: `{"mode":"lab","uptime_seconds",`
-`"requests_total","users","tickets","sessions","export_jobs"}`.
+`200` with non-sensitive counters: `{"mode":"lab","uptime_seconds",
+"requests_total","users","tickets","sessions","export_jobs"}`.
 
 ### POST /admin/config
-Body JSON objeto. `200` com `{"valid":true,"applied":false,"received":<eco>,`
-`"note":"lab mode: configuration is validated and echoed, never applied",`
-`"request_id"}`. Nada é aplicado. Erros: `415`, `400`, `422` (não objeto).
+JSON object body. `200` with `{"valid":true,"applied":false,
+"received":<echo>,"note":"lab mode: configuration is validated and
+echoed, never applied","request_id"}`. Nothing is applied. Errors:
+`415`, `400`, `422` (not an object).
 
 ### GET /internal/debug
-`200` apenas com dados não sensíveis: versões, `started_at`, uptime e
-contadores (incluindo `calls_buffered`).
+`200` with non-sensitive data only: versions, `started_at`, uptime and
+counters (including `calls_buffered`).
 
-## Utilitários de laboratório
+## Lab utilities
 
 ### GET /lab/echo
-`200` com `{"method","path","query" (crua),"headers" (allowlist),`
-`"body_bytes","body_sha256","request_id"}`. Allowlist de headers refletidos:
-`Host, User-Agent, Accept, Accept-Encoding, Accept-Language, Content-Type,
-Content-Length, X-Request-ID, X-Test-Case, X-Forwarded-For, X-Forwarded-Proto`.
-`Authorization` e `Cookie` nunca são refletidos; o body nunca é ecoado (apenas
-tamanho e hash). Só aceita GET (`405` com `Allow: GET` para os demais).
+`200` with `{"method","path","query" (raw),"headers" (allowlist),
+"body_bytes","body_sha256","request_id"}`. Reflected header allowlist:
+`Host, User-Agent, Accept, Accept-Encoding, Accept-Language,
+Content-Type, Content-Length, X-Request-ID, X-Test-Case,
+X-Forwarded-For, X-Forwarded-Proto`. `Authorization` and `Cookie` are
+never reflected; the body is never echoed (only size and hash). GET
+only (`405` with `Allow: GET` for the others).
 
 ### /lab/method
-Aceita GET, HEAD, POST, PUT, PATCH, DELETE e OPTIONS. `200` com
-`{"method","received":true,"allowed":[...],"request_id"}` e header `Allow`
-completo. HEAD responde sem corpo com `Content-Length` do corpo equivalente.
+Accepts GET, HEAD, POST, PUT, PATCH, DELETE and OPTIONS. `200` with
+`{"method","received":true,"allowed":[...],"request_id"}` and the full
+`Allow` header. HEAD answers without a body with the `Content-Length`
+of the equivalent body.
 
 ### GET /lab/slow?ms=N
-Dorme `N` ms (0 a `MAX_SLOW_MS`) e responde `{"slept_ms","max_ms",`
-`"request_id"}`. `400` para valores não numéricos ou acima do teto.
+Sleeps `N` ms (0 to `MAX_SLOW_MS`) and answers `{"slept_ms","max_ms",
+"request_id"}`. `400` for non-numeric values or above the ceiling.
 
 ### GET /lab/status/{code}
-Responde com o status pedido (200..599). 204, 205 e 304 vêm sem corpo; os
-demais com `{"requested_status":code,"request_id"}`. `400` fora da faixa ou
-não numérico.
+Answers with the requested status (200..599). 204, 205 and 304 come
+without a body; the others with `{"requested_status":code,
+"request_id"}`. `400` out of range or non-numeric.
 
 ### GET /lab/response-marker
-`200` `text/plain` com o corpo fixo `LAB_RESPONSE_MARKER_7f3a\n` e header
-`X-Lab-Marker` com o mesmo marcador, para testes de inspeção de resposta.
+`200` `text/plain` with the fixed body `LAB_RESPONSE_MARKER_7f3a\n` and
+an `X-Lab-Marker` header with the same marker, for response-inspection
+tests.
 
 ### GET /lab/large?bytes=N
-`200` `text/plain` com exatamente N bytes `A` (0 a `MAX_LARGE_BYTES`). `400`
-fora da faixa ou não numérico.
+`200` `text/plain` with exactly N bytes `A` (0 to `MAX_LARGE_BYTES`).
+`400` out of range or non-numeric.
 
 ### GET /lab/headers
-`200` JSON listando os headers fixados na resposta: `X-Frame-Options: DENY`,
-`X-Content-Type-Options: nosniff`, `Referrer-Policy: no-referrer`,
-`Content-Security-Policy: default-src 'none'; frame-ancestors 'none'`,
-`Strict-Transport-Security: max-age=31536000; includeSubDomains`,
-`X-Permitted-Cross-Domain-Policies: none`, `X-Lab-Static-Header: set-by-lab`.
+`200` JSON listing the headers fixed on the response:
+`X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`,
+`Referrer-Policy: no-referrer`, `Content-Security-Policy: default-src
+'none'; frame-ancestors 'none'`, `Strict-Transport-Security:
+max-age=31536000; includeSubDomains`,
+`X-Permitted-Cross-Domain-Policies: none`,
+`X-Lab-Static-Header: set-by-lab`.
 
 ### GET /lab/stream
-`200` `text/plain` com `Transfer-Encoding: chunked`: cinco partes
-`lab-stream-chunk-N-of-5` enviadas a cada 100 ms, escritas manualmente sobre
-a conexão (takeover do veb; sem API de streaming nativa nesta versão).
+`200` `text/plain` with `Transfer-Encoding: chunked`: five parts
+`lab-stream-chunk-N-of-5` sent every 100 ms, written manually over the
+connection (veb connection takeover; there is no native response
+streaming API in this version).
 
-### GET /lab/calls (protegido)
-Exige `X-Lab-Token: <LAB_ADMIN_TOKEN>` ou `Authorization: Bearer <token>`.
-`200` com `{"count","capacity":200,"calls":[...]}` em ordem cronológica;
-cada call: `{"request_id","x_test_case","method","path","route","status",`
-`"timestamp"}`. Sem token: `401`; token errado: `403`; sem `LAB_ADMIN_TOKEN`
-configurada: `404` `lab_calls_disabled`. É a prova do que chegou ao backend.
+### GET /lab/calls (protected)
+Requires `X-Lab-Token: <LAB_ADMIN_TOKEN>` or
+`Authorization: Bearer <token>`. `200` with
+`{"count","capacity":200,"calls":[...]}` in chronological order; each
+call: `{"request_id","x_test_case","method","path","route","status",
+"timestamp"}`. Without a token: `401`; wrong token: `403`; without
+`LAB_ADMIN_TOKEN` configured: `404` `lab_calls_disabled`. This is the
+proof of what reached the backend.
 
-### POST /lab/calls/reset (protegido)
-Mesma proteção. `200` `{"reset":true,"dropped":N,"request_id"}`.
+### POST /lab/calls/reset (protected)
+Same protection. `200` `{"reset":true,"dropped":N,"request_id"}`.

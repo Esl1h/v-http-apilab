@@ -3,33 +3,33 @@
   "info": {
     "title": "v-http-lab",
     "version": "1.0.0",
-    "description": "API corporativa sintética e determinística para laboratório. Todos os dados são 100% sintéticos e residem em memória: reiniciar o processo restaura o estado inicial. Toda resposta carrega o header X-Request-ID (usando o valor recebido, quando válido, ou um UUID v4 gerado). Toda resposta de erro segue o formato {\"error\":{\"code\",\"message\",\"request_id\"}}. O header opcional X-Test-Case rotula a requisição no log estruturado e no buffer /lab/calls.",
+    "description": "Synthetic and deterministic corporate API for lab use. All data is 100% synthetic and lives in memory: restarting the process restores the initial state. Every response carries the X-Request-ID header (using the received value when valid, or a generated UUID v4). Every error response follows the format {\"error\":{\"code\",\"message\",\"request_id\"}}. The optional X-Test-Case header labels the request in the structured log and in the /lab/calls buffer.",
     "license": { "name": "MIT" }
   },
   "servers": [
-    { "url": "http://localhost:8080", "description": "Servidor local (porta configurável pela env PORT)" }
+    { "url": "http://localhost:8080", "description": "Local server (port configurable via the PORT env)" }
   ],
   "tags": [
-    { "name": "Infra", "description": "Observabilidade e metadados do serviço" },
-    { "name": "Docs", "description": "Documentação da API" },
-    { "name": "Auth", "description": "Autenticação simulada (sem segurança real)" },
-    { "name": "Users", "description": "CRUD de usuários sintéticos" },
-    { "name": "Search", "description": "Busca no corpus sintético" },
-    { "name": "Reports", "description": "Relatórios sintéticos e exportação" },
-    { "name": "Tickets", "description": "Tickets sintéticos" },
-    { "name": "Forms", "description": "Formulários urlencoded" },
-    { "name": "Integrations", "description": "Webhooks e stub GraphQL" },
-    { "name": "Files", "description": "Uploads em memória e arquivos estáticos" },
-    { "name": "Admin", "description": "Administração simulada" },
-    { "name": "Lab", "description": "Utilitários de teste (echo, status, limites, prova de chegada)" }
+    { "name": "Infra", "description": "Observability and service metadata" },
+    { "name": "Docs", "description": "API documentation" },
+    { "name": "Auth", "description": "Simulated authentication (no real security)" },
+    { "name": "Users", "description": "CRUD over synthetic users" },
+    { "name": "Search", "description": "Search over the synthetic corpus" },
+    { "name": "Reports", "description": "Synthetic reports and export" },
+    { "name": "Tickets", "description": "Synthetic tickets" },
+    { "name": "Forms", "description": "Urlencoded forms" },
+    { "name": "Integrations", "description": "Webhooks and the GraphQL stub" },
+    { "name": "Files", "description": "In-memory uploads and static files" },
+    { "name": "Admin", "description": "Simulated administration" },
+    { "name": "Lab", "description": "Testing utilities (echo, status, limits, proof of receipt)" }
   ],
   "paths": {
     "/": {
       "get": {
         "tags": ["Infra"],
-        "summary": "Índice do serviço",
+        "summary": "Service index",
         "responses": {
-          "200": { "description": "Informações básicas e endpoints principais", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Index" } } } }
+          "200": { "description": "Basic information and main endpoints", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Index" } } } }
         }
       }
     },
@@ -38,7 +38,7 @@
         "tags": ["Infra"],
         "summary": "Liveness",
         "responses": {
-          "200": { "description": "Servidor vivo", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Health" } } } }
+          "200": { "description": "Server alive", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Health" } } } }
         }
       }
     },
@@ -46,37 +46,37 @@
       "get": {
         "tags": ["Infra"],
         "summary": "Readiness",
-        "description": "Responde 503 quando a env READY_FORCE_FAIL tem qualquer valor não vazio.",
+        "description": "Answers 503 when the READY_FORCE_FAIL env has any non-empty value.",
         "responses": {
-          "200": { "description": "Pronto", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Ready" } } } },
-          "503": { "description": "Indisponível por configuração (READY_FORCE_FAIL)", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Ready" } } } }
+          "200": { "description": "Ready", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Ready" } } } },
+          "503": { "description": "Unavailable by configuration (READY_FORCE_FAIL)", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Ready" } } } }
         }
       }
     },
     "/version": {
       "get": {
         "tags": ["Infra"],
-        "summary": "Versões e build",
+        "summary": "Versions and build",
         "responses": {
-          "200": { "description": "Versão do app, versão do compilador V e data de build", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Version" } } } }
+          "200": { "description": "App version, V compiler version and build date", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Version" } } } }
         }
       }
     },
     "/metrics": {
       "get": {
         "tags": ["Infra"],
-        "summary": "Métricas no formato Prometheus",
+        "summary": "Prometheus format metrics",
         "responses": {
-          "200": { "description": "Texto Prometheus (v_http_lab_up, uptime, requests_total por rota/status)", "content": { "text/plain": { "schema": { "type": "string" } } } }
+          "200": { "description": "Prometheus text (v_http_lab_up, uptime, requests_total by route/status)", "content": { "text/plain": { "schema": { "type": "string" } } } }
         }
       }
     },
     "/openapi.json": {
       "get": {
         "tags": ["Docs"],
-        "summary": "Especificação OpenAPI desta API",
+        "summary": "OpenAPI specification of this API",
         "responses": {
-          "200": { "description": "Documento OpenAPI 3.0.3", "content": { "application/json": { "schema": { "type": "object" } } } }
+          "200": { "description": "OpenAPI 3.0.3 document", "content": { "application/json": { "schema": { "type": "object" } } } }
         }
       }
     },
@@ -84,25 +84,25 @@
       "get": {
         "tags": ["Docs"],
         "summary": "Swagger UI",
-        "description": "Página HTML com o Swagger UI apontando para /openapi.json. Os recursos da interface são carregados de CDN (requer acesso à internet no navegador).",
+        "description": "HTML page with Swagger UI pointing at /openapi.json. The UI assets are loaded from a CDN (requires internet access in the browser).",
         "responses": {
-          "200": { "description": "Página Swagger UI", "content": { "text/html": { "schema": { "type": "string" } } } }
+          "200": { "description": "Swagger UI page", "content": { "text/html": { "schema": { "type": "string" } } } }
         }
       }
     },
     "/api/v1/auth/login": {
       "post": {
         "tags": ["Auth"],
-        "summary": "Login com credenciais sintéticas",
-        "description": "Credenciais padrão: admin / lab-password-123456 (configuráveis por LAB_USERNAME e LAB_PASSWORD). A senha nunca é logada nem devolvida.",
+        "summary": "Login with synthetic credentials",
+        "description": "Default credentials: admin / lab-password-123456 (configurable via LAB_USERNAME and LAB_PASSWORD). The password is never logged or returned.",
         "requestBody": {
           "required": true,
           "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LoginRequest" } } }
         },
         "responses": {
-          "200": { "description": "Token sintético emitido", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LoginResponse" } } } },
+          "200": { "description": "Synthetic token issued", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LoginResponse" } } } },
           "400": { "$ref": "#/components/responses/BadRequest" },
-          "401": { "description": "Credenciais inválidas", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "401": { "description": "Invalid credentials", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
           "415": { "$ref": "#/components/responses/UnsupportedMediaType" },
           "422": { "$ref": "#/components/responses/ValidationError" }
         }
@@ -111,46 +111,46 @@
     "/api/v1/auth/logout": {
       "post": {
         "tags": ["Auth"],
-        "summary": "Revoga o token",
+        "summary": "Revokes the token",
         "parameters": [{ "$ref": "#/components/parameters/BearerAuth" }],
         "responses": {
-          "200": { "description": "Token revogado", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Logout" } } } },
-          "401": { "description": "Token ausente ou desconhecido", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+          "200": { "description": "Token revoked", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Logout" } } } },
+          "401": { "description": "Missing or unknown token", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
         }
       }
     },
     "/api/v1/auth/me": {
       "get": {
         "tags": ["Auth"],
-        "summary": "Perfil sintético do token",
+        "summary": "Synthetic profile of the token",
         "parameters": [{ "$ref": "#/components/parameters/BearerAuth" }],
         "responses": {
-          "200": { "description": "Perfil sintético", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Me" } } } },
-          "401": { "description": "Token ausente, inválido ou expirado", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+          "200": { "description": "Synthetic profile", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Me" } } } },
+          "401": { "description": "Missing, invalid or expired token", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
         }
       }
     },
     "/api/v1/users": {
       "get": {
         "tags": ["Users"],
-        "summary": "Lista usuários com paginação",
+        "summary": "Lists users with pagination",
         "parameters": [
-          { "name": "page", "in": "query", "schema": { "type": "integer", "minimum": 1, "default": 1 }, "description": "Página (default 1)" },
-          { "name": "per_page", "in": "query", "schema": { "type": "integer", "minimum": 1, "maximum": 100, "default": 20 }, "description": "Itens por página (1..100)" },
-          { "name": "department", "in": "query", "schema": { "type": "string" }, "description": "Filtro exato por departamento" }
+          { "name": "page", "in": "query", "schema": { "type": "integer", "minimum": 1, "default": 1 }, "description": "Page (default 1)" },
+          { "name": "per_page", "in": "query", "schema": { "type": "integer", "minimum": 1, "maximum": 100, "default": 20 }, "description": "Items per page (1..100)" },
+          { "name": "department", "in": "query", "schema": { "type": "string" }, "description": "Exact department filter" }
         ],
         "responses": {
-          "200": { "description": "Página de usuários", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UsersPage" } } } },
+          "200": { "description": "Page of users", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UsersPage" } } } },
           "400": { "$ref": "#/components/responses/BadRequest" },
           "422": { "$ref": "#/components/responses/ValidationError" }
         }
       },
       "post": {
         "tags": ["Users"],
-        "summary": "Cria um usuário",
+        "summary": "Creates a user",
         "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UserInput" } } } },
         "responses": {
-          "201": { "description": "Usuário criado (ids a partir de 26)", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/User" } } } },
+          "201": { "description": "User created (ids start at 26)", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/User" } } } },
           "400": { "$ref": "#/components/responses/BadRequest" },
           "415": { "$ref": "#/components/responses/UnsupportedMediaType" },
           "422": { "$ref": "#/components/responses/ValidationError" }
@@ -161,19 +161,19 @@
       "parameters": [{ "$ref": "#/components/parameters/UserId" }],
       "get": {
         "tags": ["Users"],
-        "summary": "Consulta um usuário",
+        "summary": "Fetches a user",
         "responses": {
-          "200": { "description": "Usuário", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/User" } } } },
+          "200": { "description": "User", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/User" } } } },
           "400": { "$ref": "#/components/responses/BadRequest" },
           "404": { "$ref": "#/components/responses/NotFound" }
         }
       },
       "put": {
         "tags": ["Users"],
-        "summary": "Substitui um usuário",
+        "summary": "Replaces a user",
         "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UserInput" } } } },
         "responses": {
-          "200": { "description": "Usuário atualizado", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/User" } } } },
+          "200": { "description": "User updated", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/User" } } } },
           "400": { "$ref": "#/components/responses/BadRequest" },
           "404": { "$ref": "#/components/responses/NotFound" },
           "415": { "$ref": "#/components/responses/UnsupportedMediaType" },
@@ -182,11 +182,11 @@
       },
       "patch": {
         "tags": ["Users"],
-        "summary": "Atualização parcial",
-        "description": "Qualquer subconjunto de name, email, department, role. Campos desconhecidos e valores não string são rejeitados.",
+        "summary": "Partial update",
+        "description": "Any subset of name, email, department, role. Unknown fields and non-string values are rejected.",
         "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UserPatch" } } } },
         "responses": {
-          "200": { "description": "Usuário atualizado", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/User" } } } },
+          "200": { "description": "User updated", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/User" } } } },
           "400": { "$ref": "#/components/responses/BadRequest" },
           "404": { "$ref": "#/components/responses/NotFound" },
           "415": { "$ref": "#/components/responses/UnsupportedMediaType" },
@@ -195,9 +195,9 @@
       },
       "delete": {
         "tags": ["Users"],
-        "summary": "Remove um usuário",
+        "summary": "Deletes a user",
         "responses": {
-          "204": { "description": "Removido (sem corpo)" },
+          "204": { "description": "Deleted (no body)" },
           "400": { "$ref": "#/components/responses/BadRequest" },
           "404": { "$ref": "#/components/responses/NotFound" }
         }
@@ -206,13 +206,13 @@
     "/api/v1/search": {
       "get": {
         "tags": ["Search"],
-        "summary": "Busca no corpus sintético",
+        "summary": "Search over the synthetic corpus",
         "parameters": [
-          { "name": "q", "in": "query", "required": true, "schema": { "type": "string", "maxLength": 256 }, "description": "Termo de busca (substring, case-insensitive)" },
-          { "name": "limit", "in": "query", "schema": { "type": "integer", "minimum": 1, "maximum": 50, "default": 10 }, "description": "Máximo de resultados" }
+          { "name": "q", "in": "query", "required": true, "schema": { "type": "string", "maxLength": 256 }, "description": "Search term (substring, case-insensitive)" },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "minimum": 1, "maximum": 50, "default": 10 }, "description": "Maximum number of results" }
         ],
         "responses": {
-          "200": { "description": "Resultados", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Search" } } } },
+          "200": { "description": "Results", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Search" } } } },
           "400": { "$ref": "#/components/responses/BadRequest" },
           "422": { "$ref": "#/components/responses/ValidationError" }
         }
@@ -221,20 +221,20 @@
     "/api/v1/reports": {
       "get": {
         "tags": ["Reports"],
-        "summary": "Catálogo de relatórios",
+        "summary": "Report catalog",
         "responses": {
-          "200": { "description": "6 relatórios fixos", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ReportsPage" } } } }
+          "200": { "description": "6 fixed reports", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ReportsPage" } } } }
         }
       }
     },
     "/api/v1/reports/export": {
       "post": {
         "tags": ["Reports"],
-        "summary": "Solicita exportação (job sintético)",
-        "description": "Nada é realmente executado; o job fica listado em /internal/debug.",
+        "summary": "Requests an export (synthetic job)",
+        "description": "Nothing actually runs; the job is listed in /internal/debug.",
         "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ExportRequest" } } } },
         "responses": {
-          "202": { "description": "Job aceito", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ExportJob" } } } },
+          "202": { "description": "Job accepted", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ExportJob" } } } },
           "400": { "$ref": "#/components/responses/BadRequest" },
           "404": { "$ref": "#/components/responses/NotFound" },
           "415": { "$ref": "#/components/responses/UnsupportedMediaType" },
@@ -245,10 +245,10 @@
     "/api/v1/reports/{id}/download": {
       "get": {
         "tags": ["Reports"],
-        "summary": "Baixa o CSV sintético do relatório",
+        "summary": "Downloads the synthetic report CSV",
         "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" }, "description": "report_id (rep-001..rep-006)" }],
         "responses": {
-          "200": { "description": "CSV sintético determinístico", "content": { "text/csv": { "schema": { "type": "string" } } } },
+          "200": { "description": "Deterministic synthetic CSV", "content": { "text/csv": { "schema": { "type": "string" } } } },
           "404": { "$ref": "#/components/responses/NotFound" }
         }
       }
@@ -256,10 +256,10 @@
     "/api/v1/tickets": {
       "post": {
         "tags": ["Tickets"],
-        "summary": "Cria um ticket",
+        "summary": "Creates a ticket",
         "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TicketInput" } } } },
         "responses": {
-          "201": { "description": "Ticket criado (ids a partir de 4; seed tem 3)", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Ticket" } } } },
+          "201": { "description": "Ticket created (ids start at 4; the seed has 3)", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Ticket" } } } },
           "400": { "$ref": "#/components/responses/BadRequest" },
           "415": { "$ref": "#/components/responses/UnsupportedMediaType" },
           "422": { "$ref": "#/components/responses/ValidationError" }
@@ -269,7 +269,7 @@
     "/api/v1/tickets/{id}": {
       "get": {
         "tags": ["Tickets"],
-        "summary": "Consulta um ticket",
+        "summary": "Fetches a ticket",
         "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer", "minimum": 1 } }],
         "responses": {
           "200": { "description": "Ticket", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Ticket" } } } },
@@ -281,8 +281,8 @@
     "/api/v1/forms/feedback": {
       "post": {
         "tags": ["Forms"],
-        "summary": "Recebimento de formulário urlencoded",
-        "description": "Content-Type obrigatório application/x-www-form-urlencoded. Valores são ecoados com escape JSON correto.",
+        "summary": "Urlencoded form intake",
+        "description": "Content-Type must be application/x-www-form-urlencoded. Values are echoed back with correct JSON escaping.",
         "requestBody": {
           "required": true,
           "content": {
@@ -301,7 +301,7 @@
           }
         },
         "responses": {
-          "200": { "description": "Confirmação com eco dos campos", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Feedback" } } } },
+          "200": { "description": "Confirmation echoing the fields", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Feedback" } } } },
           "400": { "$ref": "#/components/responses/BadRequest" },
           "415": { "$ref": "#/components/responses/UnsupportedMediaType" },
           "422": { "$ref": "#/components/responses/ValidationError" }
@@ -311,22 +311,22 @@
     "/api/v1/webhooks/receive": {
       "post": {
         "tags": ["Integrations"],
-        "summary": "Recebe payload arbitrário e responde um resumo",
-        "description": "O conteúdo do body nunca é ecoado: apenas tamanho, content type, chaves de nível superior (objetos JSON) e SHA-256.",
+        "summary": "Receives an arbitrary payload and answers a summary",
+        "description": "The body content is never echoed: only size, content type, top-level keys (JSON objects) and SHA-256.",
         "requestBody": { "required": true, "content": { "*/*": { "schema": { "type": "string" } } } },
         "responses": {
-          "200": { "description": "Resumo da recepção", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/WebhookSummary" } } } }
+          "200": { "description": "Reception summary", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/WebhookSummary" } } } }
         }
       }
     },
     "/api/v1/graphql": {
       "post": {
         "tags": ["Integrations"],
-        "summary": "Stub GraphQL (não executa queries)",
-        "description": "Valida o formato e devolve resposta fixa documentada; nenhum parser GraphQL real é executado.",
+        "summary": "GraphQL stub (does not execute queries)",
+        "description": "Validates the shape and returns a fixed documented response; no real GraphQL parser runs.",
         "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/GraphqlRequest" } } } },
         "responses": {
-          "200": { "description": "Resposta fixa", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/GraphqlResponse" } } } },
+          "200": { "description": "Fixed response", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/GraphqlResponse" } } } },
           "400": { "$ref": "#/components/responses/BadRequest" },
           "415": { "$ref": "#/components/responses/UnsupportedMediaType" },
           "422": { "$ref": "#/components/responses/ValidationError" }
@@ -336,9 +336,9 @@
     "/api/v1/files/upload": {
       "post": {
         "tags": ["Files"],
-        "summary": "Upload analisado em memória",
-        "description": "Aceita multipart/form-data (part \"file\") ou application/octet-stream (com ?name=). Nada é gravado em disco; o nome é sanitizado.",
-        "parameters": [{ "name": "name", "in": "query", "schema": { "type": "string" }, "description": "Nome do arquivo (obrigatório apenas para octet-stream)" }],
+        "summary": "Upload analyzed in memory",
+        "description": "Accepts multipart/form-data (part \"file\") or application/octet-stream (with ?name=). Nothing is written to disk; the name is sanitized.",
+        "parameters": [{ "name": "name", "in": "query", "schema": { "type": "string" }, "description": "File name (required only for octet-stream)" }],
         "requestBody": {
           "required": true,
           "content": {
@@ -353,7 +353,7 @@
           }
         },
         "responses": {
-          "201": { "description": "Resumo do upload", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Upload" } } } },
+          "201": { "description": "Upload summary", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Upload" } } } },
           "415": { "$ref": "#/components/responses/UnsupportedMediaType" },
           "422": { "$ref": "#/components/responses/ValidationError" }
         }
@@ -362,11 +362,11 @@
     "/static/{name}": {
       "get": {
         "tags": ["Files"],
-        "summary": "Arquivo estático da allowlist",
-        "description": "Permitidos: robots.txt, style.css, logo.svg, data.csv. Segmentos com barra invertida, barra ou NUL recebem 400 (path_traversal_rejected); dot-segments são normalizados pelo parser de URL e nunca alcançam a allowlist.",
+        "summary": "Static file from the allowlist",
+        "description": "Allowed: robots.txt, style.css, logo.svg, data.csv. Segments with backslash, slash or NUL get 400 (path_traversal_rejected); dot segments are normalized by the URL parser and never reach the allowlist.",
         "parameters": [{ "name": "name", "in": "path", "required": true, "schema": { "type": "string" } }],
         "responses": {
-          "200": { "description": "Conteúdo fixo com o Content-Type correspondente", "content": { "text/plain": {}, "text/css": {}, "image/svg+xml": {}, "text/csv": {} } },
+          "200": { "description": "Fixed content with the matching Content-Type", "content": { "text/plain": {}, "text/css": {}, "image/svg+xml": {}, "text/csv": {} } },
           "400": { "$ref": "#/components/responses/BadRequest" },
           "404": { "$ref": "#/components/responses/NotFound" }
         }
@@ -375,19 +375,19 @@
     "/admin/status": {
       "get": {
         "tags": ["Admin"],
-        "summary": "Contadores não sensíveis",
+        "summary": "Non-sensitive counters",
         "responses": {
-          "200": { "description": "Status operacional", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AdminStatus" } } } }
+          "200": { "description": "Operational status", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AdminStatus" } } } }
         }
       }
     },
     "/admin/config": {
       "post": {
         "tags": ["Admin"],
-        "summary": "Valida e ecoa configuração (não aplica)",
+        "summary": "Validates and echoes configuration (does not apply)",
         "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object" } } } },
         "responses": {
-          "200": { "description": "Eco validado", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AdminConfig" } } } },
+          "200": { "description": "Validated echo", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AdminConfig" } } } },
           "400": { "$ref": "#/components/responses/BadRequest" },
           "415": { "$ref": "#/components/responses/UnsupportedMediaType" },
           "422": { "$ref": "#/components/responses/ValidationError" }
@@ -397,48 +397,48 @@
     "/internal/debug": {
       "get": {
         "tags": ["Admin"],
-        "summary": "Dados não sensíveis de depuração",
+        "summary": "Non-sensitive debugging data",
         "responses": {
-          "200": { "description": "Versões, uptime e contadores", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Debug" } } } }
+          "200": { "description": "Versions, uptime and counters", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Debug" } } } }
         }
       }
     },
     "/lab/echo": {
       "get": {
         "tags": ["Lab"],
-        "summary": "Eco da requisição (allowlist de headers)",
-        "description": "Reflete método, path, query crua e os headers da allowlist (Host, User-Agent, Accept, Accept-Encoding, Accept-Language, Content-Type, Content-Length, X-Request-ID, X-Test-Case, X-Forwarded-For, X-Forwarded-Proto). Authorization e Cookie nunca são refletidos; o body é resumido em tamanho + SHA-256.",
+        "summary": "Request echo (header allowlist)",
+        "description": "Reflects method, path, raw query and the allowlist headers (Host, User-Agent, Accept, Accept-Encoding, Accept-Language, Content-Type, Content-Length, X-Request-ID, X-Test-Case, X-Forwarded-For, X-Forwarded-Proto). Authorization and Cookie are never reflected; the body is summarized as size + SHA-256.",
         "responses": {
-          "200": { "description": "Eco", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Echo" } } } }
+          "200": { "description": "Echo", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Echo" } } } }
         }
       }
     },
     "/lab/method": {
       "get": {
         "tags": ["Lab"],
-        "summary": "Informa o método recebido",
+        "summary": "Reports the received method",
         "responses": {
-          "200": { "description": "Método e lista de métodos aceitos", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Method" } } } }
+          "200": { "description": "Method and list of accepted methods", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Method" } } } }
         }
       },
       "head": {
         "tags": ["Lab"],
-        "summary": "HEAD do utilitário de método",
-        "responses": { "200": { "description": "Headers apenas (Content-Length do corpo equivalente)" } }
+        "summary": "HEAD of the method utility",
+        "responses": { "200": { "description": "Headers only (Content-Length of the equivalent body)" } }
       },
-      "post": { "tags": ["Lab"], "summary": "POST no utilitário de método", "responses": { "200": { "description": "Método POST", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Method" } } } } } },
-      "put": { "tags": ["Lab"], "summary": "PUT no utilitário de método", "responses": { "200": { "description": "Método PUT", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Method" } } } } } },
-      "patch": { "tags": ["Lab"], "summary": "PATCH no utilitário de método", "responses": { "200": { "description": "Método PATCH", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Method" } } } } } },
-      "delete": { "tags": ["Lab"], "summary": "DELETE no utilitário de método", "responses": { "200": { "description": "Método DELETE", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Method" } } } } } },
-      "options": { "tags": ["Lab"], "summary": "OPTIONS no utilitário de método", "responses": { "200": { "description": "Método OPTIONS e header Allow completo", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Method" } } } } } }
+      "post": { "tags": ["Lab"], "summary": "POST on the method utility", "responses": { "200": { "description": "Method POST", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Method" } } } } } },
+      "put": { "tags": ["Lab"], "summary": "PUT on the method utility", "responses": { "200": { "description": "Method PUT", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Method" } } } } } },
+      "patch": { "tags": ["Lab"], "summary": "PATCH on the method utility", "responses": { "200": { "description": "Method PATCH", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Method" } } } } } },
+      "delete": { "tags": ["Lab"], "summary": "DELETE on the method utility", "responses": { "200": { "description": "Method DELETE", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Method" } } } } } },
+      "options": { "tags": ["Lab"], "summary": "OPTIONS on the method utility", "responses": { "200": { "description": "Method OPTIONS and the full Allow header", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Method" } } } } } }
     },
     "/lab/slow": {
       "get": {
         "tags": ["Lab"],
-        "summary": "Atraso configurável",
-        "parameters": [{ "name": "ms", "in": "query", "schema": { "type": "integer", "minimum": 0, "maximum": 10000 }, "description": "Milissegundos de espera (0 até MAX_SLOW_MS, padrão 10000)" }],
+        "summary": "Configurable delay",
+        "parameters": [{ "name": "ms", "in": "query", "schema": { "type": "integer", "minimum": 0, "maximum": 10000 }, "description": "Milliseconds to wait (0 up to MAX_SLOW_MS, default 10000)" }],
         "responses": {
-          "200": { "description": "Espera concluída", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Slow" } } } },
+          "200": { "description": "Wait completed", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Slow" } } } },
           "400": { "$ref": "#/components/responses/BadRequest" }
         }
       }
@@ -446,11 +446,11 @@
     "/lab/status/{code}": {
       "get": {
         "tags": ["Lab"],
-        "summary": "Responde com o status pedido",
-        "description": "Aceita 200..599; 204, 205 e 304 vêm sem corpo.",
+        "summary": "Answers with the requested status",
+        "description": "Accepts 200..599; 204, 205 and 304 come without a body.",
         "parameters": [{ "name": "code", "in": "path", "required": true, "schema": { "type": "integer", "minimum": 200, "maximum": 599 } }],
         "responses": {
-          "200": { "description": "Status pedido (o código real é o solicitado)", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/StatusBody" } } } },
+          "200": { "description": "Requested status (the actual code is the requested one)", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/StatusBody" } } } },
           "400": { "$ref": "#/components/responses/BadRequest" }
         }
       }
@@ -458,20 +458,20 @@
     "/lab/response-marker": {
       "get": {
         "tags": ["Lab"],
-        "summary": "Marcador fixo de resposta",
-        "description": "Corpo text/plain com LAB_RESPONSE_MARKER_7f3a e header X-Lab-Marker com o mesmo valor.",
+        "summary": "Fixed response marker",
+        "description": "text/plain body with LAB_RESPONSE_MARKER_7f3a and an X-Lab-Marker header with the same value.",
         "responses": {
-          "200": { "description": "Marcador", "content": { "text/plain": { "schema": { "type": "string", "example": "LAB_RESPONSE_MARKER_7f3a\n" } } } }
+          "200": { "description": "Marker", "content": { "text/plain": { "schema": { "type": "string", "example": "LAB_RESPONSE_MARKER_7f3a\n" } } } }
         }
       }
     },
     "/lab/large": {
       "get": {
         "tags": ["Lab"],
-        "summary": "Corpo de N bytes",
-        "parameters": [{ "name": "bytes", "in": "query", "schema": { "type": "integer", "minimum": 0, "maximum": 1048576 }, "description": "Tamanho exato do corpo (0 até MAX_LARGE_BYTES)" }],
+        "summary": "N-byte body",
+        "parameters": [{ "name": "bytes", "in": "query", "schema": { "type": "integer", "minimum": 0, "maximum": 1048576 }, "description": "Exact body size (0 up to MAX_LARGE_BYTES)" }],
         "responses": {
-          "200": { "description": "N bytes A", "content": { "text/plain": { "schema": { "type": "string" } } } },
+          "200": { "description": "N bytes of A", "content": { "text/plain": { "schema": { "type": "string" } } } },
           "400": { "$ref": "#/components/responses/BadRequest" }
         }
       }
@@ -479,44 +479,44 @@
     "/lab/headers": {
       "get": {
         "tags": ["Lab"],
-        "summary": "Conjunto fixo de headers de segurança",
+        "summary": "Fixed set of security headers",
         "responses": {
-          "200": { "description": "Lista dos headers fixados", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Headers" } } } }
+          "200": { "description": "List of the fixed headers", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Headers" } } } }
         }
       }
     },
     "/lab/stream": {
       "get": {
         "tags": ["Lab"],
-        "summary": "Resposta em partes (chunked)",
-        "description": "Cinco partes lab-stream-chunk-N-of-5 enviadas a cada 100 ms com Transfer-Encoding: chunked.",
+        "summary": "Response in parts (chunked)",
+        "description": "Five parts lab-stream-chunk-N-of-5 sent every 100 ms with Transfer-Encoding: chunked.",
         "responses": {
-          "200": { "description": "Fluxo em partes", "content": { "text/plain": { "schema": { "type": "string" } } } }
+          "200": { "description": "Stream in parts", "content": { "text/plain": { "schema": { "type": "string" } } } }
         }
       }
     },
     "/lab/calls": {
       "get": {
         "tags": ["Lab"],
-        "summary": "Buffer das últimas requisições recebidas",
-        "description": "Proteção: header X-Lab-Token ou Authorization: Bearer com o valor de LAB_ADMIN_TOKEN. Sem a env configurada, responde 404 (lab_calls_disabled). É a prova do que realmente chegou ao processo.",
+        "summary": "Buffer of the last received requests",
+        "description": "Protection: X-Lab-Token header or Authorization: Bearer with the LAB_ADMIN_TOKEN value. Without the env set, answers 404 (lab_calls_disabled). This is the proof of what actually reached the process.",
         "responses": {
-          "200": { "description": "Chamadas registradas (cronológicas)", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Calls" } } } },
-          "401": { "description": "Token ausente", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
-          "403": { "description": "Token inválido", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
-          "404": { "description": "Endpoints desabilitados (LAB_ADMIN_TOKEN não configurada)", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+          "200": { "description": "Recorded calls (chronological)", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Calls" } } } },
+          "401": { "description": "Missing token", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "403": { "description": "Invalid token", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "404": { "description": "Endpoints disabled (LAB_ADMIN_TOKEN not set)", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
         }
       }
     },
     "/lab/calls/reset": {
       "post": {
         "tags": ["Lab"],
-        "summary": "Limpa o buffer de chamadas",
+        "summary": "Clears the calls buffer",
         "responses": {
-          "200": { "description": "Buffer limpo", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CallsReset" } } } },
-          "401": { "description": "Token ausente", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
-          "403": { "description": "Token inválido", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
-          "404": { "description": "Endpoint desabilitado", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+          "200": { "description": "Buffer cleared", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CallsReset" } } } },
+          "401": { "description": "Missing token", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "403": { "description": "Invalid token", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "404": { "description": "Endpoint disabled", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
         }
       }
     }
@@ -524,13 +524,13 @@
   "components": {
     "parameters": {
       "UserId": { "name": "id", "in": "path", "required": true, "schema": { "type": "integer", "minimum": 1 } },
-      "BearerAuth": { "name": "Authorization", "in": "header", "required": true, "schema": { "type": "string", "example": "Bearer vhl-..." }, "description": "Token sintético obtido em /api/v1/auth/login" }
+      "BearerAuth": { "name": "Authorization", "in": "header", "required": true, "schema": { "type": "string", "example": "Bearer vhl-..." }, "description": "Synthetic token obtained at /api/v1/auth/login" }
     },
     "responses": {
-      "BadRequest": { "description": "Sintaxe inválida (JSON quebrado, id não numérico, query inválida)", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
-      "NotFound": { "description": "Recurso ou rota inexistente", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
-      "UnsupportedMediaType": { "description": "Content-Type inesperado para o endpoint", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
-      "ValidationError": { "description": "Corpo válido, porém semanticamente inválido (campos ausentes/fora dos limites)", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+      "BadRequest": { "description": "Invalid syntax (broken JSON, non-numeric id, invalid query)", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+      "NotFound": { "description": "Resource or route does not exist", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+      "UnsupportedMediaType": { "description": "Unexpected Content-Type for the endpoint", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+      "ValidationError": { "description": "Valid body but semantically invalid (missing or out-of-range fields)", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
     },
     "schemas": {
       "Error": {
@@ -613,7 +613,7 @@
         "required": ["name", "email", "department", "role"],
         "properties": {
           "name": { "type": "string", "minLength": 1, "maxLength": 100 },
-          "email": { "type": "string", "maxLength": 254, "description": "Sintaxe user@dominio.tld" },
+          "email": { "type": "string", "maxLength": 254, "description": "user@domain.tld syntax" },
           "department": { "type": "string", "minLength": 1, "maxLength": 50 },
           "role": { "type": "string", "enum": ["admin", "operator", "viewer"] }
         }
@@ -731,7 +731,7 @@
           "content_type": { "type": "string" },
           "json_valid": { "type": "boolean" },
           "top_level_keys": { "type": "array", "items": { "type": "string" } },
-          "body_sha256": { "type": "string", "description": "SHA-256 do corpo em hex" },
+          "body_sha256": { "type": "string", "description": "SHA-256 of the body in hex" },
           "stored": { "type": "boolean", "example": false },
           "request_id": { "type": "string" }
         }
@@ -763,7 +763,7 @@
       "Upload": {
         "type": "object",
         "properties": {
-          "filename": { "type": "string", "example": "report.pdf", "description": "Nome sanitizado (basename, apenas [A-Za-z0-9._-])" },
+          "filename": { "type": "string", "example": "report.pdf", "description": "Sanitized name (basename, only [A-Za-z0-9._-])" },
           "size": { "type": "integer" },
           "content_type": { "type": "string" },
           "sha256": { "type": "string" },
@@ -852,7 +852,7 @@
         "type": "object",
         "properties": {
           "request_id": { "type": "string" },
-          "x_test_case": { "type": "string", "description": "Valor do header X-Test-Case recebido" },
+          "x_test_case": { "type": "string", "description": "Value of the received X-Test-Case header" },
           "method": { "type": "string" },
           "path": { "type": "string" },
           "route": { "type": "string", "example": "/api/v1/users/:id" },

@@ -1,105 +1,106 @@
-# Testando com o v-http-lab
+# Testing with v-http-lab
 
-Como exercitar a API simulada e usar os utilitários de teste embutidos. O
-projeto é agnóstico: serve como upstream determinístico para qualquer
-laboratório de integração, proxy ou ferramenta de teste.
+How to exercise the simulated API and use the built-in testing
+utilities. The project is agnostic: it serves as a deterministic
+upstream for any integration lab, proxy or testing tool.
 
-## Subindo e batendo na API
+## Starting and calling the API
 
 ```sh
 ./scripts/build.sh
-./scripts/run.sh                 # sobe em 0.0.0.0:8080
+./scripts/run.sh                 # listens on 0.0.0.0:8080
 curl http://127.0.0.1:8080/health
 ```
 
-Documentação interativa: `http://127.0.0.1:8080/docs` (Swagger UI; os
-recursos da interface vêm de CDN). Especificação bruta:
-`http://127.0.0.1:8080/openapi.json` (OpenAPI 3.0.3, também embutida no
-binário).
+Interactive documentation: `http://127.0.0.1:8080/docs` (Swagger UI; the
+interface assets come from a CDN). Raw specification:
+`http://127.0.0.1:8080/openapi.json` (OpenAPI 3.0.3, also embedded in
+the binary).
 
-## Prova de chegada: X-Test-Case + /lab/calls
+## Proof of receipt: X-Test-Case + /lab/calls
 
-Todo request que chega ao processo é registrado num buffer em memória (as
-últimas 200 requisições). Isso permite provar, de forma verificável, se uma
-requisição chegou ao backend ou foi interrompida antes (por exemplo por um
-proxy, balanceador, firewall, timeout ou erro de rede).
+Every request that reaches the process is recorded in an in-memory
+buffer (the last 200 requests). This makes it verifiable whether a
+request reached the backend or was cut off before it (for example by a
+proxy, load balancer, firewall, timeout or network error).
 
-1. Suba com um token de laboratório:
+1. Start with a lab token:
 
 ```sh
 LAB_ADMIN_TOKEN=lab-secret ./scripts/run.sh
 ```
 
-2. Rotule cada requisição do caso de teste com um header único:
+2. Label each request of the test case with a unique header:
 
 ```sh
 curl -H 'X-Test-Case: case-42-select-query' \
      'http://127.0.0.1:8080/api/v1/search?q=security'
 ```
 
-3. Consulte o buffer:
+3. Inspect the buffer:
 
 ```sh
 curl -H 'X-Lab-Token: lab-secret' http://127.0.0.1:8080/lab/calls | \
   jq '.calls[] | select(.x_test_case == "case-42-select-query")'
 ```
 
-Interpretação:
+Interpretation:
 
-- Entrada presente: a requisição chegou ao backend (com `status` e `route`
-  reais, além do `request_id`).
-- Entrada ausente: a requisição não chegou. A ausência prova que o backend
-  não a recebeu; para descobrir quem interrompeu, cruze com os logs do
-  intermediário que estiver testando (aqui vale qualquer coisa: proxy,
-  balanceador, firewall, timeout ou erro de rede).
+- Entry present: the request reached the backend (with the real
+  `status` and `route`, plus the `request_id`).
+- Entry absent: the request did not arrive. The absence proves the
+  backend never saw it; to find out who cut it off, cross-check with
+  the logs of the intermediary under test (anything counts: proxy,
+  load balancer, firewall, timeout or network error).
 
-Entre rodadas:
+Between rounds:
 
 ```sh
 curl -X POST -H 'X-Lab-Token: lab-secret' http://127.0.0.1:8080/lab/calls/reset
 ```
 
-Sem `LAB_ADMIN_TOKEN` configurada, os endpoints `/lab/calls*` respondem 404
-(desabilitados).
+Without `LAB_ADMIN_TOKEN` configured, the `/lab/calls*` endpoints answer
+404 (disabled).
 
-## Limites de tamanho em camadas
+## Size limits across layers
 
-O corpo de uma requisição atravessa até três limites distintos, e é
-importante saber qual deles respondeu:
+The body of a request crosses up to three distinct limits, and it is
+important to know which one answered:
 
-1. Intermediário (se houver): proxies e balanceadores normalmente limitam o
-   corpo; o backend nunca vê a requisição.
-2. Backend veb/fasthttp: recusa em enquadramento corpos acima de 64 MiB e
-   headers acima de 16 KiB (413/431 genéricos, sem JSON e sem log da
-   requisição; a conexão é fechada).
-3. Aplicação (`MAX_BODY_BYTES`, padrão 1 MiB): 413 com o envelope JSON de
-   erro, com log e registro em `/lab/calls`.
+1. Intermediary (if any): proxies and load balancers usually limit the
+   body; the backend never sees the request.
+2. veb/fasthttp backend: refuses while framing bodies above 64 MiB and
+   headers above 16 KiB (generic 413/431, without JSON and without a
+   request log; the connection is closed).
+3. Application (`MAX_BODY_BYTES`, default 1 MiB): 413 with the JSON
+   error envelope, with a log entry and a record in `/lab/calls`.
 
-## Matriz: endpoint x tipo de teste
+## Matrix: endpoint x test type
 
-| Endpoint | O que exercita |
+| Endpoint | What it exercises |
 | --- | --- |
-| `/lab/method` (7 métodos; TRACE e outros caem em 405+Allow) | métodos HTTP permitidos e negação de métodos exóticos |
-| `/admin/status`, `/admin/config`, `/internal/debug`, `/static/*` | controle de acesso por path |
-| `/api/v1/users` (POST/PUT/PATCH), `/api/v1/tickets`, `/api/v1/graphql`, `/admin/config` | validação e escape de payloads JSON |
-| `/api/v1/forms/feedback` | payload `application/x-www-form-urlencoded` |
-| `/api/v1/files/upload` | multipart: tamanho, part ausente, filename com traversal, Content-Type |
-| `/static/{name}`, `/static/..%5C...` | path traversal e normalização |
-| `/api/v1/search?q=...`, `/lab/echo?...` | o mesmo payload em posições distintas (query string) |
-| `/api/v1/auth/login` | credenciais em JSON, tokens Bearer, vazamento de senha em resposta/log |
-| `/lab/response-marker`, `/lab/headers` | inspeção e reescrita de resposta (marcador e headers fixos) |
-| `/lab/large?bytes=N` e POST com corpo grande | limites de tamanho por camada |
-| `/lab/slow?ms=N` | timeouts (a requisição pode expirar no cliente e ainda constar em `/lab/calls`) |
-| `/lab/status/{code}` | tratamento de códigos de erro do upstream |
-| `/lab/stream` | resposta em partes (chunked) |
-| qualquer endpoint em rajada | contadores em `/metrics` e `/internal/debug` para conciliar o volume |
-| `/api/v1/webhooks/receive` | payloads arbitrários sem eco; prova de recepção por SHA-256 |
+| `/lab/method` (7 methods; TRACE and others fall into 405+Allow) | allowed HTTP methods and denial of exotic methods |
+| `/admin/status`, `/admin/config`, `/internal/debug`, `/static/*` | access control by path |
+| `/api/v1/users` (POST/PUT/PATCH), `/api/v1/tickets`, `/api/v1/graphql`, `/admin/config` | JSON payload validation and escaping |
+| `/api/v1/forms/feedback` | `application/x-www-form-urlencoded` payload |
+| `/api/v1/files/upload` | multipart: size, missing part, traversal-looking filename, Content-Type |
+| `/static/{name}`, `/static/..%5C...` | path traversal and normalization |
+| `/api/v1/search?q=...`, `/lab/echo?...` | the same payload in distinct positions (query string) |
+| `/api/v1/auth/login` | credentials in JSON, Bearer tokens, password leakage in response/log |
+| `/lab/response-marker`, `/lab/headers` | response inspection and rewriting (marker and fixed headers) |
+| `/lab/large?bytes=N` and POST with a large body | size limits per layer |
+| `/lab/slow?ms=N` | timeouts (the request may expire on the client and still appear in `/lab/calls`) |
+| `/lab/status/{code}` | upstream error-code handling |
+| `/lab/stream` | response in parts (chunked) |
+| any endpoint under load | counters in `/metrics` and `/internal/debug` to reconcile volume |
+| `/api/v1/webhooks/receive` | arbitrary payloads without echo; proof of receipt via SHA-256 |
 
-## Fluxo recomendado de uma rodada
+## Recommended flow of one round
 
 1. `POST /lab/calls/reset`.
-2. Dispare os casos, cada um com um `X-Test-Case` único.
-3. `GET /lab/calls` e cruze com os logs dos intermediários.
-4. `GET /metrics` para a visão agregada (contadores por rota/status).
-5. Repita com outra configuração: os dados sintéticos são determinísticos,
-   então a diferença entre rodadas vem apenas do que estiver sob teste.
+2. Fire the cases, each with a unique `X-Test-Case`.
+3. `GET /lab/calls` and cross-check with the intermediary logs.
+4. `GET /metrics` for the aggregated view (counters by route/status).
+5. Repeat with another configuration: the synthetic data is
+   deterministic, so the difference between rounds comes only from
+   whatever is under test.
