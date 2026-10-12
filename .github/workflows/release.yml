@@ -51,15 +51,16 @@ jobs:
             v-http-lab-linux-amd64
             SHA256SUMS
           body: |
-            Binário linux-amd64 pré-compilado com o toolchain V fixado
-            (commit do compilador gravado em `/version`).
+            Prebuilt linux-amd64 binary compiled with the pinned V
+            toolchain (compiler commit recorded in `/version`).
 
-            Dinâmico, linkado à glibc (Debian bookworm, glibc 2.36): use em
-            distribuições com glibc >= 2.36 (Debian 12+, Ubuntu 23.04+,
-            Fedora 38+, Arch etc.) ou na imagem `debian:bookworm-slim`.
+            Dynamic, linked against glibc (Debian bookworm, glibc 2.36):
+            use on distributions with glibc >= 2.36 (Debian 12+,
+            Ubuntu 23.04+, Fedora 38+, Arch etc.) or on the
+            `debian:bookworm-slim` image.
 
-            Uso direto:
+            Direct usage:
             ```
-            ./v-http-lab-linux-amd64   # PORT=8080 por padrão, bind 0.0.0.0
+            ./v-http-lab-linux-amd64   # PORT=8080 by default, binds 0.0.0.0
             ```
-            Verifique a integridade com `sha256sum -c SHA256SUMS`.
+            Verify integrity with `sha256sum -c SHA256SUMS`.

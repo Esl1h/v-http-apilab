@@ -1,61 +1,65 @@
 # v-http-lab
 
-Backend HTTP determinístico, com dados 100% sintéticos, que simula uma API
-corporativa interna. Rodando o binário, a porta abre e a API começa a
-responder imediatamente: sem banco, sem migrações, sem arquivos de
-configuração (reiniciar restaura o estado inicial).
+Deterministic HTTP backend with 100% synthetic data that simulates an
+internal corporate API. It also serves as the upstream in a WAF testing
+lab (NGINX + Coraza + OWASP CRS). Run the binary and the port opens
+immediately: no database, no migrations, no config files (restarting
+restores the initial state).
 
-Documentação interativa (Swagger UI) em `/docs` e especificação OpenAPI
-3.0.3 embutida no binário em `/openapi.json`.
+Interactive documentation (Swagger UI) at `/docs` and the embedded
+OpenAPI 3.0.3 specification at `/openapi.json`.
 
-> **Aviso**: ferramenta de laboratório. Não é um template de produção, não é
-> segura como aplicação real e não deve ser exposta a redes não controladas.
-> A autenticação é simulada, os dados são sintéticos e nada é persistido.
+> **Warning**: lab tool. This is not a production template, it is not
+> secure as a real application and must not be exposed to uncontrolled
+> networks. Authentication is simulated, data is synthetic and nothing
+> is persisted.
 
-## Versão do compilador e módulo HTTP
+## Compiler version and HTTP module
 
-| Item | Valor fixado |
+| Item | Pinned value |
 | --- | --- |
-| Linguagem | V (vlang), commit `c6bb06f5c04d78f9f6d22a57c257d27e835ba40a` |
-| Auto-identificação | `V 0.5.2 c6bb06f` (master, posterior à tag 0.5.2) |
-| Módulo HTTP | `veb` (vlib; único framework web da vlib nesta versão) |
-| Backend de rede | `veb` usa o backend `fasthttp` multi-thread desta versão |
-| Dependências externas | nenhuma (somente vlib: veb, net.http, json2, sync, crypto, rand, os, strconv, strings, time) |
+| Language | V (vlang), commit `c6bb06f5c04d78f9f6d22a57c257d27e835ba40a` |
+| Self-identification | `V 0.5.2 c6bb06f` (master, after tag 0.5.2) |
+| HTTP module | `veb` (vlib; the only web framework in vlib at this version) |
+| Network backend | `veb` uses the multi-threaded `fasthttp` backend of this version |
+| External dependencies | none (vlib only: veb, net.http, json2, sync, crypto, rand, os, strconv, strings, time) |
 
-Justificativas:
+Justifications:
 
-1. `vweb` foi **removido** da vlib nesta versão; `veb` é o sucessor mantido.
-2. `net.http` é voltado ao cliente HTTP; o servidor (`net.http` server) não
-   expõe roteamento e é usado internamente por outras ferramentas. `veb` dá
-   roteamento, contexto, multipart e takeover de conexão.
-3. O pin é por commit (a tag `0.5.2` está 2405 commits atrás do compilador
-   usado aqui); o Dockerfile reproduz exatamente este commit.
+1. `vweb` was **removed** from vlib in this version; `veb` is the
+   maintained successor.
+2. `net.http` targets the HTTP client; the server (`net.http` server)
+   exposes no routing and is used internally by other tools. `veb`
+   provides routing, context, multipart and connection takeover.
+3. The pin is by commit (tag `0.5.2` is 2405 commits behind the
+   compiler used here); the Dockerfile reproduces exactly this commit.
 
-## Build e execução (local)
+## Build and run (local)
 
-Requisitos: um compilador V no commit citado (veja abaixo), `curl`, `bash`.
+Requirements: a V compiler at the commit above (see below), `curl`,
+`bash`.
 
 ```sh
-./scripts/build.sh      # compila bin/v-http-lab (grava a versão do V no binário)
-./scripts/run.sh        # sobe o servidor (PORT=8080 por padrão)
+./scripts/build.sh      # compiles bin/v-http-lab (records the V version in the binary)
+./scripts/run.sh        # starts the server (PORT=8080 by default)
 ```
 
-Exemplos:
+Examples:
 
 ```sh
 PORT=9090 scripts/run.sh
-LAB_ADMIN_TOKEN=meu-token scripts/run.sh   # habilita /lab/calls
-READY_FORCE_FAIL=1 scripts/run.sh          # /ready passa a responder 503
+LAB_ADMIN_TOKEN=my-token scripts/run.sh   # enables /lab/calls
+READY_FORCE_FAIL=1 scripts/run.sh         # /ready starts answering 503
 ```
 
-Documentação ao vivo:
+Live documentation:
 
-- `http://localhost:8080/docs`: Swagger UI (recursos da interface via CDN;
-  a API em si é autocontida).
-- `http://localhost:8080/openapi.json`: especificação OpenAPI 3.0.3
-  (o arquivo fonte é `src/openapi/openapi.json`, embutido no binário).
+- `http://localhost:8080/docs`: Swagger UI (UI assets come from a CDN;
+  the API itself is self-contained).
+- `http://localhost:8080/openapi.json`: OpenAPI 3.0.3 specification
+  (source file is `src/openapi/openapi.json`, embedded in the binary).
 
-Como instalar o compilador V fixado (mesmo método do Dockerfile):
+How to install the pinned V compiler (same method as the Dockerfile):
 
 ```sh
 git init vlang && cd vlang
@@ -69,22 +73,23 @@ make
 
 ```sh
 docker build -t v-http-lab:latest .
-docker run --rm -p 8080:8080 -e LAB_ADMIN_TOKEN=meu-token v-http-lab:latest
-# ou
+docker run --rm -p 8080:8080 -e LAB_ADMIN_TOKEN=my-token v-http-lab:latest
+# or
 docker compose up -d
 ```
 
-A imagem é multi-stage: o builder clona o compilador V no commit fixado, e o
-runtime é `debian:bookworm-slim` (o binário é dinâmico, linkado à glibc;
-`ldd` no Dockerfile e no build comprovam as dependências). O processo roda
-como usuário não-root (uid 10001) e há um `HEALTHCHECK` apontando para
-`/health`.
+The image is multi-stage: the builder clones the V compiler at the
+pinned commit and the runtime is `debian:bookworm-slim` (the binary is
+dynamic, linked against glibc; `ldd` in the Dockerfile and in the build
+proves the dependencies). The process runs as a non-root user (uid
+10001) and there is a `HEALTHCHECK` pointing at `/health`.
 
-## Releases e imagem de runtime (binário, sem compilar)
+## Releases and runtime image (binary, no compiling)
 
-Cada tag `v*` dispara o workflow `.github/workflows/release.yml`: ele
-compila com o mesmo toolchain fixado (estágio `builder` do Dockerfile),
-testa o binário e o anexa ao release do GitHub junto com `SHA256SUMS`.
+Every `v*` tag triggers `.github/workflows/release.yml`: it compiles
+with the same pinned toolchain (the Dockerfile `builder` stage), smoke
+tests the binary and attaches it to the GitHub release together with
+`SHA256SUMS`.
 
 ```sh
 gh release download v1.0.0 --repo Esl1h/v-http-lab   # v-http-lab-linux-amd64 + SHA256SUMS
@@ -92,186 +97,227 @@ sha256sum -c SHA256SUMS
 ./v-http-lab-linux-amd64
 ```
 
-O binário é dinâmico, linkado à glibc (compilado em Debian bookworm,
-glibc 2.36): use em distribuições com glibc >= 2.36 ou na imagem
-`debian:bookworm-slim`.
+The binary is dynamic, linked against glibc (built on Debian bookworm,
+glibc 2.36): use it on distributions with glibc >= 2.36 or on the
+`debian:bookworm-slim` image.
 
-Para um Docker que não compila nada, use a imagem de runtime, que baixa o
-binário do release fixado por tag e checksum (build em segundos):
+For a Docker image that compiles nothing, use the runtime image, which
+downloads the release binary pinned by tag and checksum (builds in
+seconds):
 
 ```sh
 docker build -f Dockerfile.runtime -t v-http-lab:latest .
 docker run --rm -p 8080:8080 v-http-lab:latest
 ```
 
-`Dockerfile` (compila do código com o toolchain fixado) e
-`Dockerfile.runtime` (usa o binário do release com verificação de
-integrity) produzem o mesmo servidor; escolha conforme preferir
-reprodutibilidade total do build ou velocidade.
+`Dockerfile` (compiles from source with the pinned toolchain) and
+`Dockerfile.runtime` (uses the release binary with integrity
+verification) produce the same server; choose full build
+reproducibility or speed.
 
 ## Endpoints
 
-Resumo; contrato completo em `docs/endpoints.md`.
+Summary; the full contract is in `docs/endpoints.md` (in Portuguese).
 
-| Grupo | Endpoint | Método | Descrição |
+| Group | Endpoint | Method | Description |
 | --- | --- | --- | --- |
 | Infra | `/health` | GET | liveness |
-| Infra | `/ready` | GET | readiness (forçável para 503) |
-| Infra | `/version` | GET | versões do app e do V + build |
-| Infra | `/metrics` | GET | texto Prometheus |
-| Docs | `/openapi.json` | GET | especificação OpenAPI 3.0.3 embutida |
+| Infra | `/ready` | GET | readiness (forceable to 503) |
+| Infra | `/version` | GET | app and V versions + build |
+| Infra | `/metrics` | GET | Prometheus text |
+| Docs | `/openapi.json` | GET | embedded OpenAPI 3.0.3 spec |
 | Docs | `/docs` | GET | Swagger UI |
-| Auth | `/api/v1/auth/login` | POST | credenciais sintéticas fixas |
-| Auth | `/api/v1/auth/logout` | POST | revoga o token |
-| Auth | `/api/v1/auth/me` | GET | perfil sintético (Bearer) |
-| Users | `/api/v1/users` | GET/POST | lista paginada / criação |
+| Auth | `/api/v1/auth/login` | POST | fixed synthetic credentials |
+| Auth | `/api/v1/auth/logout` | POST | revokes the token |
+| Auth | `/api/v1/auth/me` | GET | synthetic profile (Bearer) |
+| Users | `/api/v1/users` | GET/POST | paginated list / creation |
 | Users | `/api/v1/users/{id}` | GET/PUT/PATCH/DELETE | CRUD |
-| Busca | `/api/v1/search?q=&limit=` | GET | busca no corpus sintético |
-| Relatórios | `/api/v1/reports` | GET | catálogo sintético |
-| Relatórios | `/api/v1/reports/export` | POST | cria job sintético |
-| Relatórios | `/api/v1/reports/{id}/download` | GET | CSV sintético |
-| Tickets | `/api/v1/tickets` | POST | cria ticket |
-| Tickets | `/api/v1/tickets/{id}` | GET | consulta ticket |
+| Search | `/api/v1/search?q=&limit=` | GET | search over the synthetic corpus |
+| Reports | `/api/v1/reports` | GET | synthetic catalog |
+| Reports | `/api/v1/reports/export` | POST | creates a synthetic job |
+| Reports | `/api/v1/reports/{id}/download` | GET | synthetic CSV |
+| Tickets | `/api/v1/tickets` | POST | creates a ticket |
+| Tickets | `/api/v1/tickets/{id}` | GET | fetches a ticket |
 | Forms | `/api/v1/forms/feedback` | POST | application/x-www-form-urlencoded |
-| Integrações | `/api/v1/webhooks/receive` | POST | resumo (tamanho, chaves, sha256) |
-| Integrações | `/api/v1/graphql` | POST | stub documentado (não executa GraphQL) |
-| Arquivos | `/api/v1/files/upload` | POST | multipart ou octet-stream (não grava em disco) |
-| Arquivos | `/static/{name}` | GET | allowlist embutida (traversal rejeitado) |
-| Admin | `/admin/status` | GET | contadores não sensíveis |
-| Admin | `/admin/config` | POST | eco validado, nada é aplicado |
-| Admin | `/internal/debug` | GET | dados não sensíveis |
-| Lab | `/lab/echo` | GET | reflete método/path/query/headers permitidos |
-| Lab | `/lab/method` | GET/HEAD/POST/PUT/PATCH/DELETE/OPTIONS | informa o método recebido |
-| Lab | `/lab/slow?ms=` | GET | atraso configurável |
-| Lab | `/lab/status/{code}` | GET | responde o status pedido (200..599) |
-| Lab | `/lab/response-marker` | GET | marcador fixo `LAB_RESPONSE_MARKER_7f3a` |
-| Lab | `/lab/large?bytes=` | GET | corpo de N bytes |
-| Lab | `/lab/headers` | GET | headers customizados e de segurança |
-| Lab | `/lab/stream` | GET | resposta em partes (chunked manual) |
-| Lab | `/lab/calls` | GET | buffer das últimas requisições (token) |
-| Lab | `/lab/calls/reset` | POST | limpa o buffer (token) |
+| Integrations | `/api/v1/webhooks/receive` | POST | summary (size, keys, sha256) |
+| Integrations | `/api/v1/graphql` | POST | documented stub (does not run GraphQL) |
+| Files | `/api/v1/files/upload` | POST | multipart or octet-stream (never written to disk) |
+| Files | `/static/{name}` | GET | embedded allowlist (traversal rejected) |
+| Admin | `/admin/status` | GET | non-sensitive counters |
+| Admin | `/admin/config` | POST | validated echo, nothing applied |
+| Admin | `/internal/debug` | GET | non-sensitive data |
+| Lab | `/lab/echo` | GET | reflects method/path/query/allowed headers |
+| Lab | `/lab/method` | GET/HEAD/POST/PUT/PATCH/DELETE/OPTIONS | reports the received method |
+| Lab | `/lab/slow?ms=` | GET | configurable delay |
+| Lab | `/lab/status/{code}` | GET | answers the requested status (200..599) |
+| Lab | `/lab/response-marker` | GET | fixed marker `LAB_RESPONSE_MARKER_7f3a` |
+| Lab | `/lab/large?bytes=` | GET | N-byte body |
+| Lab | `/lab/headers` | GET | custom and security headers |
+| Lab | `/lab/stream` | GET | response in parts (manual chunked) |
+| Lab | `/lab/calls` | GET | buffer of the last requests (token) |
+| Lab | `/lab/calls/reset` | POST | clears the buffer (token) |
 
-Toda resposta de erro segue:
+Every error response follows:
 
 ```json
 {"error":{"code":"...","message":"...","request_id":"..."}}
 ```
 
-`X-Request-ID` é devolvido em toda resposta (usando o valor recebido quando
-válido, ou um UUID gerado). O header `X-Test-Case`, quando enviado, é gravado
-no log estruturado e no buffer `/lab/calls` para rotular casos de teste.
+`X-Request-ID` is returned in every response (using the received value
+when valid, or a generated UUID). The `X-Test-Case` header, when sent,
+is recorded in the structured log and in the `/lab/calls` buffer to
+label test cases.
 
-## Variáveis de ambiente
+## Environment variables
 
-| Variável | Padrão | Descrição |
+| Variable | Default | Description |
 | --- | --- | --- |
-| `PORT` | `8080` | porta de escuta (bind em `0.0.0.0`) |
-| `MAX_BODY_BYTES` | `1048576` | limite de body por requisição (413) |
-| `READ_TIMEOUT_MS` | `30000` | timeout de leitura (granularidade de 1s, ver limitações) |
-| `LAB_ADMIN_TOKEN` | vazio | protege `/lab/calls*`; vazio desabilita (404) |
-| `READY_FORCE_FAIL` | vazio | qualquer valor não vazio força `/ready` a 503 |
-| `LOG_LEVEL` | `info` | `debug`, `info`, `warn` ou `error` |
-| `MAX_SLOW_MS` | `10000` | teto do `/lab/slow?ms=` |
-| `MAX_LARGE_BYTES` | `1048576` | teto do `/lab/large?bytes=` |
-| `LAB_USERNAME` | `admin` | usuário sintético do login |
-| `LAB_PASSWORD` | `lab-password-123456` | senha sintética do login (nunca logada) |
+| `PORT` | `8080` | listening port (binds `0.0.0.0`) |
+| `MAX_BODY_BYTES` | `1048576` | per-request body limit (413) |
+| `READ_TIMEOUT_MS` | `30000` | read timeout (1 s granularity, see limitations) |
+| `LAB_ADMIN_TOKEN` | empty | protects `/lab/calls*`; empty disables them (404) |
+| `READY_FORCE_FAIL` | empty | any non-empty value forces `/ready` to 503 |
+| `LOG_LEVEL` | `info` | `debug`, `info`, `warn` or `error` |
+| `MAX_SLOW_MS` | `10000` | ceiling for `/lab/slow?ms=` |
+| `MAX_LARGE_BYTES` | `1048576` | ceiling for `/lab/large?bytes=` |
+| `LAB_USERNAME` | `admin` | synthetic login username |
+| `LAB_PASSWORD` | `lab-password-123456` | synthetic login password (never logged) |
 
-Valores inválidos em qualquer variável abortam o processo com erro explícito.
+Invalid values in any variable abort the process with an explicit
+error.
 
-## Testes
+## Tests
 
 ```sh
-make test          # executa smoke + errors + limits
+make test          # runs smoke + errors + limits
 ./scripts/test-smoke.sh
 ./scripts/test-errors.sh
 ./scripts/test-limits.sh
-tests/infra.sh     # qualquer grupo isolado (all)
+tests/infra.sh     # any isolated group (all)
 LAB_TEST_MODE=errors tests/users.sh
 ```
 
-Cada caso imprime `PASS/FAIL` com esperado vs. obtido; qualquer FAIL encerra
-com código de saída não zero. Sem `BASE_URL` definida, cada grupo sobe um
-servidor novo em `18080` (estado limpo). Com `BASE_URL`, roda contra um
-servidor externo.
+Each case prints `PASS/FAIL` with expected vs. actual; any FAIL exits
+non-zero. Without `BASE_URL` set, each group starts a fresh server on
+`18080` (clean state). With `BASE_URL`, it runs against an external
+server.
 
 ## Logs
 
-Uma linha JSON por requisição em stdout: `timestamp`, `request_id`, `method`,
-`path`, `query` (valores sensíveis mascarados como `[REDACTED]`), `status`,
-`duration_ms`, `route`, `remote_addr`, `user_agent`, `content_length`,
-`content_type`, `x_forwarded_for`, `x_test_case`.
+One JSON line per request on stdout: `timestamp`, `request_id`,
+`method`, `path`, `query` (sensitive values masked as `[REDACTED]`),
+`status`, `duration_ms`, `route`, `remote_addr`, `user_agent`,
+`content_length`, `content_type`, `x_forwarded_for`, `x_test_case`.
 
-Nunca são logados ou refletidos: `Authorization`, `Cookie`, `Set-Cookie`,
-senhas ou tokens. Filtragem de linhas não JSON (as duas linhas de startup do
-veb, ver limitações): `grep '^{'`.
+Never logged or reflected: `Authorization`, `Cookie`, `Set-Cookie`,
+passwords or tokens. Filtering non-JSON lines (the two veb startup
+lines, see limitations): `grep '^{'`.
 
-## Limitações conhecidas (honestidade operacional)
+## Known limitations (operational honesty)
 
-1. **Corpo até 64 MiB é lido pelo backend antes do app**: `MAX_BODY_BYTES` é
-   aplicado na camada da aplicação (413 JSON) depois da leitura; corpos acima
-   de 64 MiB são recusados pelo próprio backend veb/fasthttp com um 413
-   genérico (sem JSON, sem log). Detalhes em `docs/testing.md`.
-2. **Headers acima de 16 KiB** são recusados pelo backend com 431 (antes de
-   qualquer lógica da aplicação).
-3. **READ_TIMEOUT_MS tem granularidade de 1 segundo** (limite do
-   `RunParams.timeout_in_seconds` do veb; mínimo efetivo 1s).
-4. **O veb imprime duas linhas de startup não JSON** em stdout
-   (`[veb] Running multi-threaded app...` e `listening on ...`); não há como
-   desabilitá-las nesta versão.
-5. **Streaming é manual**: `/lab/stream` é escrito com enquadramento chunked
-   próprio sobre o takeover da conexão; o veb não expõe API de streaming de
-   resposta nesta versão. Funciona (testado), mas é implementação própria.
-6. **Path traversal com dot-segments** (`/static/..%2f..`) é normalizado pelo
-   parser de URL (RFC 3986) antes do roteamento; a requisição nunca alcança a
-   allowlist. Traversal com barras invertidas e afins, que chegam ao handler,
-   recebem 400 explícito (`path_traversal_rejected`).
-7. **Porta em uso**: o veb pergunta no stdin se deve matar o processo que
-   ocupa a porta; sem stdin (Docker) ele responde `<EOF>`, não mata nada e o
-   processo sai com erro de bind.
-8. **Determinismo**: dados e respostas do seed são determinísticos; tokens de
-   sessão e ids de job (`job-N`) são gerados em memória e somem no restart.
+1. **Bodies up to 64 MiB are read by the backend before the app**:
+   `MAX_BODY_BYTES` is enforced at the application layer (413 JSON)
+   after the read; bodies above 64 MiB are refused by the veb/fasthttp
+   backend itself with a generic 413 (no JSON, no log). Details in
+   `docs/testing.md`.
+2. **Headers above 16 KiB** are refused by the backend with 431
+   (before any application logic).
+3. **READ_TIMEOUT_MS has 1-second granularity** (a `RunParams`
+   `timeout_in_seconds` limitation of veb; effective minimum 1 s).
+4. **veb prints two non-JSON startup lines** on stdout
+   (`[veb] Running multi-threaded app...` and `listening on ...`);
+   there is no way to disable them in this version.
+5. **Streaming is manual**: `/lab/stream` is written with hand-rolled
+   chunked framing over the veb connection takeover; veb exposes no
+   response streaming API in this version. It works (tested), but it is
+   a custom implementation.
+6. **Path traversal with dot segments** (`/static/..%2f..`) is
+   normalized by the URL parser (RFC 3986) before routing; the request
+   never reaches the allowlist. Traversal with backslashes and the
+   like, which reaches the handler, gets an explicit 400
+   (`path_traversal_rejected`).
+7. **Port already in use**: veb asks on stdin whether to kill the
+   process holding the port; without stdin (Docker) it reads `<EOF>`,
+   kills nothing and the process exits with a bind error.
+8. **Determinism**: seed data and responses are deterministic; session
+   tokens and job ids (`job-N`) are generated in memory and disappear
+   on restart.
 
-## Estrutura do repositório
+## Repository structure
 
 ```
 v-http-lab/
-├── Dockerfile               build multi-stage com o compilador fixado por commit
-├── Dockerfile.runtime       imagem que usa o binário do release (com checksum)
-├── docker-compose.yml       backend isolado para teste local
-├── Makefile                 atalhos (build, run, test, docker, fmt, clean)
-├── .github/workflows/       release.yml: tag v* -> binário + SHA256SUMS no release
-├── v.mod                    módulo (base_url: src)
+├── Dockerfile               multi-stage build with the compiler pinned by commit
+├── Dockerfile.runtime       image that uses the release binary (with checksum)
+├── docker-compose.yml       isolated backend for local tests
+├── Makefile                 shortcuts (build, run, test, docker, fmt, clean)
+├── .github/workflows/       release.yml: tag v* -> binary + SHA256SUMS on the release
+├── v.mod                    module (base_url: src)
 ├── scripts/                 build.sh, run.sh, test-smoke.sh, test-errors.sh, test-limits.sh
-├── tests/                   lib.sh + grupos: infra, auth, users, search-reports,
+├── tests/                   lib.sh + groups: infra, auth, users, search-reports,
 │                            tickets-forms, webhooks, files, lab
-├── docs/                    endpoints.md (contrato) e testing.md (como testar)
-└── src/                     um módulo por responsabilidade:
-    ├── main.v               entrada: config, rotas, server
-    ├── config/              variáveis de ambiente
-    ├── seed/                dados sintéticos determinísticos (usuários, relatórios...)
-    ├── requestid/           resolução do X-Request-ID
-    ├── logging/             log estruturado e mascaramento
-    ├── state/               estado em memória com mutex (users, tickets, sessões,
-    │                        jobs, métricas, buffer de calls)
-    ├── router/              App/Context veb, dispatch, 405+Allow, envelope de erro
-    ├── openapi/             spec OpenAPI embutida ($embed_file) + Swagger UI
+├── docs/                    endpoints.md (contract) and testing.md (how to test)
+└── src/                     one module per responsibility:
+    ├── main.v               entry point: config, routes, server
+    ├── config/              environment variables
+    ├── seed/                deterministic synthetic data (users, reports, ...)
+    ├── requestid/           X-Request-ID resolution
+    ├── logging/             structured logging and masking
+    ├── state/               in-memory state behind a mutex (users, tickets,
+    │                        sessions, jobs, metrics, calls buffer)
+    ├── router/              App/Context veb, dispatch, 405+Allow, error envelope
+    ├── openapi/             embedded OpenAPI spec ($embed_file) + Swagger UI
     ├── infra/               health, ready, version
-    ├── auth/                login/logout/me sintéticos
-    ├── users/               CRUD de usuários
-    ├── search/              busca sintética
-    ├── reports/             relatórios, export e CSV
+    ├── auth/                synthetic login/logout/me
+    ├── users/               user CRUD
+    ├── search/              synthetic search
+    ├── reports/             reports, export and CSV
     ├── tickets/             tickets
-    ├── forms/               form urlencoded
-    ├── webhooks/            receive + stub graphql
-    ├── admin/               status, config (eco), debug
-    ├── files/               upload multipart/octet-stream + allowlist /static
-    ├── lab/                 utilitários de teste
+    ├── forms/               urlencoded form
+    ├── webhooks/            receive + graphql stub
+    ├── admin/               status, config (echo), debug
+    ├── files/               multipart/octet-stream upload + /static allowlist
+    ├── lab/                 testing utilities
     └── metrics/             /metrics Prometheus
 ```
 
-## Segurança do próprio backend
+## Backend self-security
 
-Entradas nunca são executadas nem interpretadas (não há SQL, shell ou
-eval): são apenas validadas e devolvidas com escape JSON correto. Não há
-acesso a disco além da leitura do binário (uploads são analisados em
-memória). Sem banco de dados: reiniciar o processo restaura o seed.
+Inputs are never executed or interpreted (no SQL, shell or eval): they
+are only validated and returned with correct JSON escaping. There is no
+disk access beyond reading the binary itself (uploads are analyzed in
+memory). No database: restarting the process restores the seed.
+
+## Em português (resumo)
+
+Backend HTTP determinístico, com dados 100% sintéticos, que simula uma
+API corporativa interna e serve como upstream num laboratório de WAF
+(NGINX + Coraza + OWASP CRS). Compilador V fixado por commit
+(`c6bb06f5c04d78f9f6d22a57c257d27e835ba40a`, auto-identificado
+`V 0.5.2 c6bb06f`), módulo HTTP `veb` e nenhuma dependência externa
+(somente vlib).
+
+Uso rápido:
+
+```sh
+./scripts/build.sh                        # compila bin/v-http-lab
+LAB_ADMIN_TOKEN=meu-token scripts/run.sh  # sobe em 0.0.0.0:8080
+curl http://127.0.0.1:8080/health
+make test                                 # suíte smoke + errors + limits
+```
+
+Prova de chegada (o motivo de existir do `/lab/calls`): suba com
+`LAB_ADMIN_TOKEN`, rotule cada requisição de teste com o header
+`X-Test-Case` e consulte o buffer. Presença no buffer prova que a
+requisição chegou ao backend; ausência prova que ela foi interrompida
+antes (por proxy, WAF, firewall, timeout ou erro de rede). Detalhes em
+`docs/testing.md`.
+
+Avisos:
+
+- Ferramenta de laboratório; não é segura como aplicação real e não
+  deve ser exposta a redes não controladas.
+- Existe um port em Rust do mesmo conceito:
+  [rs-http-apilab](https://github.com/Esl1h/rs-http-apilab).
+- A documentação completa do contrato (`docs/endpoints.md` e
+  `docs/testing.md`) está em português.
