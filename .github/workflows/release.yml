@@ -10,10 +10,12 @@ permissions:
 
 jobs:
   linux-amd64:
-    runs-on: ubuntu-latest
+    # Latest runner image; the release build itself happens inside
+    # the pinned Docker image, so the runner only provides Docker.
+    runs-on: ubuntu-26.04
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Build binary with the pinned V toolchain
         run: |
@@ -45,7 +47,7 @@ jobs:
           kill "${pid}"
 
       - name: Attach to the GitHub release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           files: |
             v-http-lab-linux-amd64
