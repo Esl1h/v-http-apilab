@@ -30,7 +30,8 @@ pub const max_limit = 50
 // (case-insensitive) and returns up to `limit` hits.
 pub fn search(mut app router.App, mut ctx router.Context, params []string) veb.Result {
 	_ = params
-	query := ctx.query['q'] or {
+	query := ctx.query['q'] or { '' }
+	if query == '' {
 		return ctx.respond_error(.unprocessable_entity, 'validation_error',
 			'missing required query parameter "q"')
 	}
@@ -50,42 +51,40 @@ pub fn search(mut app router.App, mut ctx router.Context, params []string) veb.R
 	mut st := app.store()
 	needle := query.to_lower()
 	mut results := []SearchHit{cap: limit}
-	if needle != '' {
-		for u in st.users_all() {
-			if results.len >= limit {
-				break
-			}
-			if u.name.to_lower().contains(needle) || u.email.to_lower().contains(needle)
-				|| u.department.to_lower().contains(needle) {
-				results << SearchHit{
-					kind:  'user'
-					id:    u.id.str()
-					title: u.name
-				}
+	for u in st.users_all() {
+		if results.len >= limit {
+			break
+		}
+		if u.name.to_lower().contains(needle) || u.email.to_lower().contains(needle)
+			|| u.department.to_lower().contains(needle) {
+			results << SearchHit{
+				kind:  'user'
+				id:    u.id.str()
+				title: u.name
 			}
 		}
-		for r in seed.reports() {
-			if results.len >= limit {
-				break
-			}
-			if r.title.to_lower().contains(needle) || r.category.to_lower().contains(needle) {
-				results << SearchHit{
-					kind:  'report'
-					id:    r.report_id
-					title: r.title
-				}
+	}
+	for r in seed.reports() {
+		if results.len >= limit {
+			break
+		}
+		if r.title.to_lower().contains(needle) || r.category.to_lower().contains(needle) {
+			results << SearchHit{
+				kind:  'report'
+				id:    r.report_id
+				title: r.title
 			}
 		}
-		for d in seed.search_docs {
-			if results.len >= limit {
-				break
-			}
-			if d.title.to_lower().contains(needle) {
-				results << SearchHit{
-					kind:  'document'
-					id:    d.id
-					title: d.title
-				}
+	}
+	for d in seed.search_docs {
+		if results.len >= limit {
+			break
+		}
+		if d.title.to_lower().contains(needle) {
+			results << SearchHit{
+				kind:  'document'
+				id:    d.id
+				title: d.title
 			}
 		}
 	}

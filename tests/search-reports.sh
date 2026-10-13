@@ -63,4 +63,7 @@ expect_status errors 404 'download an unknown report is 404'
 http GET /api/v1/reports/rep-001/download -X DELETE
 expect_status errors 405 'DELETE on a report download is 405'
 
+http GET '/api/v1/search?q='
+expect_status errors 422 'an empty q is treated as missing (422)'
+
 summary
