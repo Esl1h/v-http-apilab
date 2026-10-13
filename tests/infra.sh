@@ -16,7 +16,7 @@ expect_body_contains smoke '"status":"ready"' '/ready body is {"status":"ready"}
 http GET /version
 expect_status smoke 200 'GET /version'
 expect_body_contains smoke '"app":"v-http-apilab"' '/version reports the app name'
-expect_body_contains smoke '"version":"1.0.0"' '/version reports the app version'
+expect_body_contains smoke '"version":"1.0.1"' '/version reports the app version'
 expect_body_contains smoke '"v_version"' '/version reports the baked V version field'
 
 http GET /

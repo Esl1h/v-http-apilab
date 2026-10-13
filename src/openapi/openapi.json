@@ -2,7 +2,7 @@
   "openapi": "3.0.3",
   "info": {
     "title": "v-http-apilab",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "description": "Synthetic and deterministic corporate API for lab use. All data is 100% synthetic and lives in memory: restarting the process restores the initial state. Every response carries the X-Request-ID header (using the received value when valid, or a generated UUID v4). Every error response follows the format {\"error\":{\"code\",\"message\",\"request_id\"}}. The optional X-Test-Case header labels the request in the structured log and in the /lab/calls buffer.",
     "license": { "name": "MIT" }
   },
@@ -552,7 +552,7 @@
         "type": "object",
         "properties": {
           "name": { "type": "string", "example": "v-http-apilab" },
-          "version": { "type": "string", "example": "1.0.0" },
+          "version": { "type": "string", "example": "1.0.1" },
           "description": { "type": "string" },
           "endpoints": { "type": "array", "items": { "type": "string" } }
         }
@@ -563,7 +563,7 @@
         "type": "object",
         "properties": {
           "app": { "type": "string", "example": "v-http-apilab" },
-          "version": { "type": "string", "example": "1.0.0" },
+          "version": { "type": "string", "example": "1.0.1" },
           "v_version": { "type": "string", "example": "V 0.5.2 c6bb06f" },
           "build_date": { "type": "string", "example": "2026-10-10" },
           "deterministic_seed": { "type": "boolean", "example": true }

@@ -8,7 +8,7 @@ module seed
 
 pub const app_name = 'v-http-apilab'
 
-pub const app_version = '1.0.0'
+pub const app_version = '1.0.1'
 
 // v_version is baked in at build time. The build scripts export the
 // output of `v version` before compiling, so /version and
