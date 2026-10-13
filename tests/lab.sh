@@ -157,4 +157,14 @@ else
 	fi
 fi
 
+http GET /lab/status/520
+expect_status smoke 520 'status answers a code without a standard name (520)'
+
+http GET /lab/status/299
+expect_status smoke 299 'status answers an unnamed 2xx code (299)'
+
+http GET /lab/status/205
+expect_status smoke 205 'status answers 205 without a body'
+expect_header_not_contains smoke 'Content-Type' 'the bodyless 205 has no Content-Type'
+
 summary

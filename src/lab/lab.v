@@ -145,18 +145,28 @@ pub fn status_code(mut app router.App, mut ctx router.Context, params []string) 
 		return ctx.respond_error(.bad_request, 'invalid_status_code',
 			'status code must be between 200 and 599, got ${code}')
 	}
+	set_raw_status(mut ctx, code)
 	if code in [204, 205, 304] {
-		if code == 204 {
-			return ctx.no_content()
-		}
-		ctx.res.set_status(http.status_from_int(code))
-		return ctx.text('')
+		// empty mimetype: no Content-Type header for a bodyless answer
+		return ctx.send_response_to_client('', '')
 	}
-	ctx.res.set_status(http.status_from_int(code))
 	return ctx.json(StatusBody{
 		requested_status: code
 		request_id:       ctx.request_id
 	})
+}
+
+// set_raw_status sets any 2xx..5xx code on the response. set_status
+// takes the http.Status enum, and codes it does not name (299, 499,
+// 520...) map to .unassigned, which veb then sends as 200.
+fn set_raw_status(mut ctx router.Context, code int) {
+	status := http.status_from_int(code)
+	if status == .unassigned {
+		ctx.res.status_code = code
+		ctx.res.status_msg = 'Unknown'
+		return
+	}
+	ctx.res.set_status(status)
 }
 
 // response_marker serves the fixed marker body for response
