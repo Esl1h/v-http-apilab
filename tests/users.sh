@@ -102,6 +102,12 @@ expect_status limits 422 'a page beyond 32 bits is out of range, not malformed'
 http GET /health
 expect_status errors 200 'the server survives the pagination edge cases'
 
+http PATCH /api/v1/users/1 -H 'Content-Type: application/json' -d 'null'
+expect_status errors 400 'patch with a null body is 400'
+
+http POST /api/v1/users -H 'Content-Type: application/json' -d '[]'
+expect_status errors 400 'create with a JSON array body is 400'
+
 http POST /api/v1/users -H 'Content-Type: application/json' -d '{broken'
 expect_body_not_contains errors '[31m' 'JSON errors carry no terminal color escapes'
 

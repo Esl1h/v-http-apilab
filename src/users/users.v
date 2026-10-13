@@ -213,9 +213,14 @@ pub fn update(mut app router.App, mut ctx router.Context, params []string) veb.R
 	if !ctx.require_json() {
 		return veb.no_result()
 	}
-	raw := ctx.parse_body[map[string]json2.Any]() or {
+	parsed := ctx.parse_body[json2.Any]() or {
 		return ctx.respond_error(.bad_request, 'invalid_json', 'request body is not valid JSON: ${err}')
 	}
+	// decoding straight into a map turns `null` into an empty map
+	if parsed !is map[string]json2.Any {
+		return ctx.respond_error(.bad_request, 'invalid_json', 'request body must be a JSON object')
+	}
+	raw := parsed as map[string]json2.Any
 	mut patch := map[string]string{}
 	mut errs := []string{}
 	for key, value in raw {
