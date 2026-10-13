@@ -23,6 +23,7 @@ import files
 import lab
 import metrics
 import openapi
+import os
 
 fn register_routes(mut app router.App) {
 	app.register(.get, '/', infra.index)
@@ -73,7 +74,16 @@ fn register_routes(mut app router.App) {
 	app.register(.post, '/lab/calls/reset', lab.calls_reset)
 }
 
+// exit_on_signal makes SIGTERM/SIGINT end the process: as PID 1 in a
+// container the kernel ignores signals that have no handler, so
+// `docker stop` would otherwise wait for its SIGKILL timeout.
+fn exit_on_signal(_ os.Signal) {
+	exit(0)
+}
+
 fn main() {
+	os.signal_opt(.term, exit_on_signal) or {}
+	os.signal_opt(.int, exit_on_signal) or {}
 	conf := config.load() or {
 		eprintln('v-http-apilab: invalid configuration: ${err}')
 		exit(1)
