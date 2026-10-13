@@ -33,7 +33,7 @@ fn parse_id(mut ctx router.Context, raw string) ?int {
 		return none
 	}
 	if id < 1 {
-		ctx.respond_error(.bad_request, 'invalid_id', 'user id must be positive, got "${id}"')
+		ctx.respond_error(.bad_request, 'invalid_id', 'user id must be positive, got ${id}')
 		return none
 	}
 	return id

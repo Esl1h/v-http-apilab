@@ -64,7 +64,7 @@ pub fn show(mut app router.App, mut ctx router.Context, params []string) veb.Res
 		return ctx.respond_error(.bad_request, 'invalid_id', 'ticket id must be numeric, got "${params[0]}"')
 	}
 	if id < 1 {
-		return ctx.respond_error(.bad_request, 'invalid_id', 'ticket id must be positive, got "${id}"')
+		return ctx.respond_error(.bad_request, 'invalid_id', 'ticket id must be positive, got ${id}')
 	}
 	mut st := app.store()
 	t := st.ticket_by_id(id) or {
