@@ -7,8 +7,8 @@
 # --checksum. Fast to build; the binary is dynamically linked against
 # glibc, so the runtime must provide a compatible glibc (bookworm = 2.36).
 
-ARG RELEASE_TAG=v1.0.0
-ARG RELEASE_SHA256=a531c9d13c948b67d9c8db5fa36568dc927245441ff8596a4daeab1b68e1c389
+ARG RELEASE_TAG=v1.0.1
+ARG RELEASE_SHA256=90732d7879295a80f0598adc1404fa06620fdd0ea0d73139d7eac23cebbfa977
 
 FROM debian:bookworm-slim AS runtime
 ARG RELEASE_TAG

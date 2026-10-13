@@ -92,7 +92,7 @@ tests the binary and attaches it to the GitHub release together with
 `SHA256SUMS`.
 
 ```sh
-gh release download v1.0.0 --repo Esl1h/v-http-apilab   # v-http-apilab-linux-amd64 + SHA256SUMS
+gh release download v1.0.1 --repo Esl1h/v-http-apilab   # v-http-apilab-linux-amd64 + SHA256SUMS
 sha256sum -c SHA256SUMS
 ./v-http-apilab-linux-amd64
 ```
