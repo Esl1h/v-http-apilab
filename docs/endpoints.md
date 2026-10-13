@@ -194,8 +194,9 @@ Serves only the embedded allowlist: `robots.txt`, `style.css`,
 `logo.svg`, `data.csv` (with their Content-Types and
 `X-Content-Type-Options: nosniff`). `404` outside the list. Segments
 with backslash, slash or NUL get `400` `path_traversal_rejected`;
-dot segments (`..`, `%2e%2e`) are normalized by the URL parser before
-routing (they never reach the allowlist).
+a single `..` segment also gets `400`. Encoded separators
+(`..%2f..`) decode to extra segments and match no route (`404`), so
+they never reach the allowlist.
 
 ## Administration (simulated)
 

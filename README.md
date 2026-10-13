@@ -231,11 +231,12 @@ lines, see limitations): `grep '^{'`.
    chunked framing over the veb connection takeover; veb exposes no
    response streaming API in this version. It works (tested), but it is
    a custom implementation.
-6. **Path traversal with dot segments** (`/static/..%2f..`) is
-   normalized by the URL parser (RFC 3986) before routing; the request
-   never reaches the allowlist. Traversal with backslashes and the
-   like, which reaches the handler, gets an explicit 400
-   (`path_traversal_rejected`).
+6. **Path traversal with dot segments is decoded, not normalized**:
+   `/static/..%2f..` decodes to extra path segments, so it matches no
+   route and answers 404 without reaching the allowlist (the error
+   message shows the decoded path, dot segments included). A single
+   `..` segment and traversal with backslashes, which do reach the
+   handler, get an explicit 400 (`path_traversal_rejected`).
 7. **Port already in use**: veb asks on stdin whether to kill the
    process holding the port; without stdin (Docker) it reads `<EOF>`,
    kills nothing and the process exits with a bind error.
