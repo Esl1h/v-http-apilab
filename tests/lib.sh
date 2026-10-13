@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# lib.sh: shared helpers for the v-http-lab curl test suites.
+# lib.sh: shared helpers for the v-http-apilab curl test suites.
 #
 # Usage:
 #   ./tests/<group>.sh              # runs all cases of one group
@@ -15,7 +15,7 @@ BASE_URL="${BASE_URL:-}"
 TEST_PORT="${TEST_PORT:-18080}"
 LAB_ADMIN_TOKEN="${LAB_ADMIN_TOKEN:-test-admin-token}"
 MODE="${LAB_TEST_MODE:-all}"
-VHTTP_BIN="${VHTTP_BIN:-bin/v-http-lab}"
+VHTTP_BIN="${VHTTP_BIN:-bin/v-http-apilab}"
 
 PASS=0
 FAIL=0
@@ -43,7 +43,7 @@ start_server() {
 		echo "FATAL: $VHTTP_BIN not found; run scripts/build.sh first" >&2
 		exit 1
 	fi
-	SERVER_LOG="$(mktemp /tmp/v-http-lab-test.XXXXXX.log)"
+	SERVER_LOG="$(mktemp /tmp/v-http-apilab-test.XXXXXX.log)"
 	PORT="$TEST_PORT" LAB_ADMIN_TOKEN="$LAB_ADMIN_TOKEN" \
 		setsid "$VHTTP_BIN" >"$SERVER_LOG" 2>&1 </dev/null &
 	SERVER_PID=$!

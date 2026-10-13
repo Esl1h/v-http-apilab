@@ -1,9 +1,9 @@
-# Isolated v-http-lab backend for local tests.
+# Isolated v-http-apilab backend for local tests.
 services:
-  v-http-lab:
+  v-http-apilab:
     build: .
-    image: v-http-lab:latest
-    container_name: v-http-lab
+    image: v-http-apilab:latest
+    container_name: v-http-apilab
     ports:
       - "8080:8080"
     environment:

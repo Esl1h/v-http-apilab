@@ -131,7 +131,7 @@ expect_body_contains smoke '"count":1' 'after reset only the reset and the calls
 # Disabled mode: a second server without LAB_ADMIN_TOKEN must answer 404
 # for both /lab/calls endpoints.
 DISABLED_PORT=$((TEST_PORT + 1))
-DISABLED_LOG="$(mktemp /tmp/v-http-lab-disabled.XXXXXX.log)"
+DISABLED_LOG="$(mktemp /tmp/v-http-apilab-disabled.XXXXXX.log)"
 env -u LAB_ADMIN_TOKEN PORT="$DISABLED_PORT" setsid "$VHTTP_BIN" >"$DISABLED_LOG" 2>&1 </dev/null &
 DISABLED_PID=$!
 for _ in $(seq 1 50); do

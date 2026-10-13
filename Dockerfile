@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 
-# v-http-lab image.
+# v-http-apilab image.
 #
 # The builder compiles with the V toolchain pinned to an exact commit of
 # https://github.com/vlang/v. The binary is dynamically linked against
@@ -39,9 +39,9 @@ COPY src ./src
 # verify the produced binary's dynamic dependencies before choosing the
 # runtime image (expected: libm.so.6 and libc.so.6 on glibc).
 RUN mkdir -p /out \
-	&& V_VERSION="$(v version)" v -prod . -o /out/v-http-lab \
+	&& V_VERSION="$(v version)" v -prod . -o /out/v-http-apilab \
 	&& echo '--- ldd of the final binary:' \
-	&& ldd /out/v-http-lab
+	&& ldd /out/v-http-apilab
 
 # ---- runtime: glibc userland, non-root user, curl for HEALTHCHECK ----
 FROM debian:bookworm-slim AS runtime
@@ -49,9 +49,9 @@ FROM debian:bookworm-slim AS runtime
 RUN apt-get update \
 	&& apt-get install -y --no-install-recommends ca-certificates curl \
 	&& rm -rf /var/lib/apt/lists/* \
-	&& useradd --uid 10001 --system --no-create-home vhttplab
+	&& useradd --uid 10001 --system --no-create-home vhttpapilab
 
-COPY --from=builder /out/v-http-lab /app/v-http-lab
+COPY --from=builder /out/v-http-apilab /app/v-http-apilab
 
 USER 10001:10001
 ENV PORT=8080
@@ -60,4 +60,4 @@ EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
 	CMD curl -fsS "http://127.0.0.1:${PORT:-8080}/health" || exit 1
 
-ENTRYPOINT ["/app/v-http-lab"]
+ENTRYPOINT ["/app/v-http-apilab"]

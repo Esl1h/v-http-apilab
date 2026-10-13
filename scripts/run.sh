@@ -7,8 +7,8 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
-if [[ ! -x bin/v-http-lab ]]; then
+if [[ ! -x bin/v-http-apilab ]]; then
 	scripts/build.sh
 fi
 
-exec ./bin/v-http-lab
+exec ./bin/v-http-apilab

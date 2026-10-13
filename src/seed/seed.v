@@ -6,7 +6,7 @@
 // intermediary can be diffed against a request that reached the app.
 module seed
 
-pub const app_name = 'v-http-lab'
+pub const app_name = 'v-http-apilab'
 
 pub const app_version = '1.0.0'
 

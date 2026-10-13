@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 
-# v-http-lab runtime-only image.
+# v-http-apilab runtime-only image.
 #
 # Instead of compiling the V toolchain (Dockerfile), this image downloads
 # the pinned release binary from GitHub Releases and verifies it with
@@ -17,13 +17,13 @@ ARG RELEASE_SHA256
 RUN apt-get update \
 	&& apt-get install -y --no-install-recommends ca-certificates curl \
 	&& rm -rf /var/lib/apt/lists/* \
-	&& useradd --uid 10001 --system --no-create-home vhttplab
+	&& useradd --uid 10001 --system --no-create-home vhttpapilab
 
 ADD --checksum=sha256:${RELEASE_SHA256} \
-	https://github.com/Esl1h/v-http-lab/releases/download/${RELEASE_TAG}/v-http-lab-linux-amd64 \
-	/app/v-http-lab
+	https://github.com/Esl1h/v-http-apilab/releases/download/${RELEASE_TAG}/v-http-apilab-linux-amd64 \
+	/app/v-http-apilab
 
-RUN chmod +x /app/v-http-lab
+RUN chmod +x /app/v-http-apilab
 
 USER 10001:10001
 ENV PORT=8080
@@ -32,4 +32,4 @@ EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
 	CMD curl -fsS "http://127.0.0.1:${PORT:-8080}/health" || exit 1
 
-ENTRYPOINT ["/app/v-http-lab"]
+ENTRYPOINT ["/app/v-http-apilab"]

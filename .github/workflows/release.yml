@@ -22,21 +22,21 @@ jobs:
           # Same builder stage as the project Dockerfile: the compiler is
           # fetched at the exact pinned commit, and the V version is baked
           # into /version at build time.
-          docker build --target builder -t v-http-lab-builder .
-          cid="$(docker create v-http-lab-builder)"
-          docker cp "${cid}":/out/v-http-lab ./v-http-lab-linux-amd64
+          docker build --target builder -t v-http-apilab-builder .
+          cid="$(docker create v-http-apilab-builder)"
+          docker cp "${cid}":/out/v-http-apilab ./v-http-apilab-linux-amd64
           docker rm "${cid}" >/dev/null
 
       - name: Verify the binary and record checksums
         run: |
-          chmod +x v-http-lab-linux-amd64
-          file v-http-lab-linux-amd64
-          ldd v-http-lab-linux-amd64 || true
-          sha256sum v-http-lab-linux-amd64 > SHA256SUMS
+          chmod +x v-http-apilab-linux-amd64
+          file v-http-apilab-linux-amd64
+          ldd v-http-apilab-linux-amd64 || true
+          sha256sum v-http-apilab-linux-amd64 > SHA256SUMS
 
       - name: Smoke test the binary
         run: |
-          PORT=18080 LAB_ADMIN_TOKEN=ci-token ./v-http-lab-linux-amd64 &
+          PORT=18080 LAB_ADMIN_TOKEN=ci-token ./v-http-apilab-linux-amd64 &
           pid=$!
           for _ in $(seq 1 50); do
             curl -sf -m 1 http://127.0.0.1:18080/health >/dev/null && break
@@ -50,7 +50,7 @@ jobs:
         uses: softprops/action-gh-release@v3
         with:
           files: |
-            v-http-lab-linux-amd64
+            v-http-apilab-linux-amd64
             SHA256SUMS
           body: |
             Prebuilt linux-amd64 binary compiled with the pinned V
@@ -63,6 +63,6 @@ jobs:
 
             Direct usage:
             ```
-            ./v-http-lab-linux-amd64   # PORT=8080 by default, binds 0.0.0.0
+            ./v-http-apilab-linux-amd64   # PORT=8080 by default, binds 0.0.0.0
             ```
             Verify integrity with `sha256sum -c SHA256SUMS`.

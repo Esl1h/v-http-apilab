@@ -30,7 +30,7 @@ const swagger_html = '<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8">
-  <title>v-http-lab API</title>
+  <title>v-http-apilab API</title>
   <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5.17.14/swagger-ui.css">
 </head>
 <body>

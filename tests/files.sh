@@ -5,7 +5,7 @@ source "$(dirname "$0")/lib.sh"
 
 start_server
 
-UPLOAD_FILE="$(mktemp /tmp/v-http-lab-upload.XXXXXX)"
+UPLOAD_FILE="$(mktemp /tmp/v-http-apilab-upload.XXXXXX)"
 printf 'SYNTHETIC-UPLOAD-CONTENT' >"$UPLOAD_FILE"
 
 http POST /api/v1/files/upload -F "file=@${UPLOAD_FILE};type=application/octet-stream"
@@ -56,7 +56,7 @@ expect_body_contains errors '"code":"path_traversal_rejected"' 'traversal uses t
 
 http GET '/static/..'
 expect_status errors 200 'dot-segment traversal is normalized by the URL parser (RFC 3986)'
-expect_body_contains errors '"name":"v-http-lab"' 'the normalized path answers the index, never a file'
+expect_body_contains errors '"name":"v-http-apilab"' 'the normalized path answers the index, never a file'
 
 http POST /static/robots.txt
 expect_status errors 405 'POST on a static file is 405'

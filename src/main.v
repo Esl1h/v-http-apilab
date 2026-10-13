@@ -1,4 +1,4 @@
-// v-http-lab: a deterministic synthetic HTTP API simulator.
+// v-http-apilab: a deterministic synthetic HTTP API simulator.
 //
 // Every response is derived from fixed synthetic in-memory data; running
 // the binary is enough to have the API answering on the configured port.
@@ -75,7 +75,7 @@ fn register_routes(mut app router.App) {
 
 fn main() {
 	conf := config.load() or {
-		eprintln('v-http-lab: invalid configuration: ${err}')
+		eprintln('v-http-apilab: invalid configuration: ${err}')
 		exit(1)
 	}
 	logger := logging.new()
@@ -84,7 +84,7 @@ fn main() {
 	app.setup(conf, st, logger)
 	app.use(handler: app.request_middleware)
 	register_routes(mut app)
-	logger.write_event('info', 'v-http-lab ${seed.app_version} starting on 0.0.0.0:${conf.port}')
+	logger.write_event('info', 'v-http-apilab ${seed.app_version} starting on 0.0.0.0:${conf.port}')
 	veb.run_at[router.App, router.Context](mut app,
 		host:                      ''
 		family:                    .ip
@@ -94,7 +94,7 @@ fn main() {
 		benchmark_page_generation: true
 		show_startup_message:      false
 	) or {
-		eprintln('v-http-lab: server failed to start: ${err}')
+		eprintln('v-http-apilab: server failed to start: ${err}')
 		exit(1)
 	}
 }

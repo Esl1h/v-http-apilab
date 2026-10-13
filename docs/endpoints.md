@@ -44,8 +44,8 @@ Dockerfile (`unknown` when not provided). `build_date` comes from the
 
 ### GET /metrics
 Prometheus text (Content-Type `text/plain; version=0.0.4;
-charset=utf-8`): `v_http_lab_up`, `v_http_lab_uptime_seconds`,
-`v_http_lab_build_info` and `v_http_lab_requests_total{route,status}`
+charset=utf-8`): `v_http_apilab_up`, `v_http_apilab_uptime_seconds`,
+`v_http_apilab_build_info` and `v_http_apilab_requests_total{route,status}`
 per route (patterns such as `/api/v1/users/:id` or `unmatched`) and
 status.
 

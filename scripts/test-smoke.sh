@@ -4,8 +4,8 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
-if [[ ! -x bin/v-http-lab ]]; then
-	echo "FATAL: bin/v-http-lab not found; run scripts/build.sh first" >&2
+if [[ ! -x bin/v-http-apilab ]]; then
+	echo "FATAL: bin/v-http-apilab not found; run scripts/build.sh first" >&2
 	exit 1
 fi
 

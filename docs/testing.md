@@ -1,4 +1,4 @@
-# Testing with v-http-lab
+# Testing with v-http-apilab
 
 How to exercise the simulated API and use the built-in testing
 utilities. The project is agnostic: it serves as a deterministic

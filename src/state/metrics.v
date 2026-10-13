@@ -15,7 +15,7 @@ pub fn (mut s State) record_metric(route string, status int) {
 	s.mu.unlock()
 }
 
-// metrics_counters_text renders the v_http_lab_requests_total lines in
+// metrics_counters_text renders the v_http_apilab_requests_total lines in
 // Prometheus text format while holding the lock, so no nested-map
 // copies can race with concurrent requests.
 pub fn (s &State) metrics_counters_text() string {
@@ -32,7 +32,7 @@ pub fn (s &State) metrics_counters_text() string {
 		codes.sort()
 		for code in codes {
 			n := statuses[code] or { 0 }
-			sb.write_string('v_http_lab_requests_total{route="${route}",status="${code}"} ${n}\n')
+			sb.write_string('v_http_apilab_requests_total{route="${route}",status="${code}"} ${n}\n')
 		}
 	}
 	return sb.str()

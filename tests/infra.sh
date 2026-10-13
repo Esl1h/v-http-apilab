@@ -15,7 +15,7 @@ expect_body_contains smoke '"status":"ready"' '/ready body is {"status":"ready"}
 
 http GET /version
 expect_status smoke 200 'GET /version'
-expect_body_contains smoke '"app":"v-http-lab"' '/version reports the app name'
+expect_body_contains smoke '"app":"v-http-apilab"' '/version reports the app name'
 expect_body_contains smoke '"version":"1.0.0"' '/version reports the app version'
 expect_body_contains smoke '"v_version"' '/version reports the baked V version field'
 
@@ -25,8 +25,8 @@ expect_body_contains smoke '"endpoints"' 'index lists endpoint hints'
 
 http GET /metrics
 expect_status smoke 200 'GET /metrics'
-expect_body_contains smoke 'v_http_lab_up 1' 'metrics expose the up gauge'
-expect_body_contains smoke 'v_http_lab_requests_total' 'metrics expose request counters'
+expect_body_contains smoke 'v_http_apilab_up 1' 'metrics expose the up gauge'
+expect_body_contains smoke 'v_http_apilab_requests_total' 'metrics expose request counters'
 expect_header_contains smoke 'text/plain' 'metrics content type is text'
 
 http GET /openapi.json

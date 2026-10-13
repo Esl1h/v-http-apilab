@@ -1,4 +1,4 @@
-# v-http-lab
+# v-http-apilab
 
 Deterministic HTTP backend with 100% synthetic data that simulates an
 internal corporate API. It also serves as the upstream in a WAF testing
@@ -40,7 +40,7 @@ Requirements: a V compiler at the commit above (see below), `curl`,
 `bash`.
 
 ```sh
-./scripts/build.sh      # compiles bin/v-http-lab (records the V version in the binary)
+./scripts/build.sh      # compiles bin/v-http-apilab (records the V version in the binary)
 ./scripts/run.sh        # starts the server (PORT=8080 by default)
 ```
 
@@ -72,8 +72,8 @@ make
 ## Docker
 
 ```sh
-docker build -t v-http-lab:latest .
-docker run --rm -p 8080:8080 -e LAB_ADMIN_TOKEN=my-token v-http-lab:latest
+docker build -t v-http-apilab:latest .
+docker run --rm -p 8080:8080 -e LAB_ADMIN_TOKEN=my-token v-http-apilab:latest
 # or
 docker compose up -d
 ```
@@ -92,9 +92,9 @@ tests the binary and attaches it to the GitHub release together with
 `SHA256SUMS`.
 
 ```sh
-gh release download v1.0.0 --repo Esl1h/v-http-lab   # v-http-lab-linux-amd64 + SHA256SUMS
+gh release download v1.0.0 --repo Esl1h/v-http-apilab   # v-http-apilab-linux-amd64 + SHA256SUMS
 sha256sum -c SHA256SUMS
-./v-http-lab-linux-amd64
+./v-http-apilab-linux-amd64
 ```
 
 The binary is dynamic, linked against glibc (built on Debian bookworm,
@@ -106,8 +106,8 @@ downloads the release binary pinned by tag and checksum (builds in
 seconds):
 
 ```sh
-docker build -f Dockerfile.runtime -t v-http-lab:latest .
-docker run --rm -p 8080:8080 v-http-lab:latest
+docker build -f Dockerfile.runtime -t v-http-apilab:latest .
+docker run --rm -p 8080:8080 v-http-apilab:latest
 ```
 
 `Dockerfile` (compiles from source with the pinned toolchain) and
@@ -246,7 +246,7 @@ lines, see limitations): `grep '^{'`.
 ## Repository structure
 
 ```
-v-http-lab/
+v-http-apilab/
 ├── Dockerfile               multi-stage build with the compiler pinned by commit
 ├── Dockerfile.runtime       image that uses the release binary (with checksum)
 ├── docker-compose.yml       isolated backend for local tests
@@ -300,7 +300,7 @@ API corporativa interna e serve como upstream num laboratório de WAF
 Uso rápido:
 
 ```sh
-./scripts/build.sh                        # compila bin/v-http-lab
+./scripts/build.sh                        # compila bin/v-http-apilab
 LAB_ADMIN_TOKEN=meu-token scripts/run.sh  # sobe em 0.0.0.0:8080
 curl http://127.0.0.1:8080/health
 make test                                 # suíte smoke + errors + limits

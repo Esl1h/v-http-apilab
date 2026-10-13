@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# build.sh: compile the release binary into bin/v-http-lab.
+# build.sh: compile the release binary into bin/v-http-apilab.
 # The V toolchain version is baked into /version at build time.
 set -euo pipefail
 
@@ -16,5 +16,5 @@ V_VERSION="$($V_BIN version 2>/dev/null || echo unknown)"
 
 echo "building with: ${V_VERSION}"
 mkdir -p bin
-V_VERSION="$V_VERSION" "$V_BIN" -prod . -o bin/v-http-lab
-echo "built: bin/v-http-lab"
+V_VERSION="$V_VERSION" "$V_BIN" -prod . -o bin/v-http-apilab
+echo "built: bin/v-http-apilab"
