@@ -82,7 +82,8 @@ with the synthetic profile `{"username","display_name","role","email",
 ## Users
 
 ### GET /api/v1/users
-Query: `page` (default 1, minimum 1), `per_page` (default 20, 1..100),
+Query: `page` (default 1, minimum 1), `per_page` (default 20, 1..100;
+an empty value uses the default),
 `department` (optional exact filter). `200` with
 `{"page","per_page","total","total_pages","items":[User]}`. Errors:
 `400` non-numeric values, `422` out of range (including a page beyond

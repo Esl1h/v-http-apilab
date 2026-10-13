@@ -17,7 +17,7 @@ pub mut:
 
 pub struct UsersPage {
 pub:
-	page        int         @[json: 'page']
+	page        i64         @[json: 'page']
 	per_page    int         @[json: 'per_page']
 	total       int         @[json: 'total']
 	total_pages int         @[json: 'total_pages']
@@ -107,11 +107,11 @@ fn parse_full_body(mut ctx router.Context) ?UserBody {
 // index lists users with pagination and an optional department filter.
 pub fn index(mut app router.App, mut ctx router.Context, params []string) veb.Result {
 	_ = params
-	page := parse_positive_int(mut ctx, ctx.query['page'] or { '1' }, 'page') or {
+	page := parse_positive_int(mut ctx, ctx.query['page'] or { '' }, 'page', 1) or {
 		return veb.no_result()
 	}
-	per_page_raw := ctx.query['per_page'] or { '20' }
-	per_page := parse_positive_int(mut ctx, per_page_raw, 'per_page') or { return veb.no_result() }
+	per_page := parse_positive_int(mut ctx, ctx.query['per_page'] or { '' }, 'per_page',
+		20) or { return veb.no_result() }
 	if per_page > max_per_page {
 		return ctx.respond_error(.unprocessable_entity, 'validation_error',
 			'"per_page" must be at most ${max_per_page}, got ${per_page}')
@@ -125,31 +125,38 @@ pub fn index(mut app router.App, mut ctx router.Context, params []string) veb.Re
 		}
 	}
 	total := filtered.len
-	total_pages := if total == 0 { 0 } else { (total + per_page - 1) / per_page }
+	size := int(per_page)
+	total_pages := if total == 0 { 0 } else { (total + size - 1) / size }
 	if page > total_pages && total > 0 {
 		return ctx.respond_error(.unprocessable_entity, 'validation_error',
 			'"page" ${page} is out of range (total_pages=${total_pages})')
 	}
-	start := (page - 1) * per_page
-	end := if start + per_page < total { start + per_page } else { total }
-	mut items := []seed.User{cap: per_page}
-	for u in filtered[start..end] {
-		items << u
+	mut items := []seed.User{}
+	// an empty result set accepts any page; slicing is only safe (and
+	// page small enough to multiply) when the page exists
+	if page <= total_pages {
+		start := int(page - 1) * size
+		end := if start + size < total { start + size } else { total }
+		items = filtered[start..end].clone()
 	}
 	return ctx.respond_json(.ok, UsersPage{
 		page:        page
-		per_page:    per_page
+		per_page:    size
 		total:       total
 		total_pages: total_pages
 		items:       items
 	})
 }
 
-fn parse_positive_int(mut ctx router.Context, raw string, field string) ?int {
+// parse_positive_int reads an optional numeric query value: empty or
+// absent yields `default`, malformed answers 400, below 1 answers 422.
+// It parses as i64 so a huge page is reported as out of range, not as
+// malformed.
+fn parse_positive_int(mut ctx router.Context, raw string, field string, default i64) ?i64 {
 	if raw == '' {
-		return 0
+		return default
 	}
-	value := strconv.atoi(raw) or {
+	value := strconv.parse_int(raw, 10, 64) or {
 		ctx.respond_error(.bad_request, 'invalid_query_value', '"${field}" must be an integer, got "${raw}"')
 		return none
 	}

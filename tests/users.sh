@@ -88,4 +88,18 @@ expect_status limits 400 'a non-numeric per_page is 400'
 http GET '/api/v1/users?page=99999&per_page=5'
 expect_status limits 422 'a page beyond the last one is 422'
 
+http GET '/api/v1/users?page=&per_page='
+expect_status errors 200 'empty page/per_page fall back to the defaults'
+expect_body_contains errors '"per_page":20' 'an empty per_page uses the default 20'
+
+http GET '/api/v1/users?department=none&page=5'
+expect_status errors 200 'any page of an empty result set is 200'
+expect_body_contains errors '"items":[]' 'an empty result set has no items'
+
+http GET '/api/v1/users?page=99999999999'
+expect_status limits 422 'a page beyond 32 bits is out of range, not malformed'
+
+http GET /health
+expect_status errors 200 'the server survives the pagination edge cases'
+
 summary
