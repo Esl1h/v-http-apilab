@@ -41,7 +41,17 @@ pub fn (mut ctx Context) respond_json[T](status http.Status, body T) veb.Result 
 // parse_body decodes the request body as JSON into T.
 // Returns an error when the body is not valid JSON.
 pub fn (ctx &Context) parse_body[T]() !T {
-	return json2.decode[T](ctx.req.data)
+	return json2.decode[T](ctx.req.data) or { return error(json_error_text(err)) }
+}
+
+// json_error_text flattens a json2 error to one line: the default msg()
+// is multi-line and carries terminal color escapes that would otherwise
+// leak into API error messages.
+fn json_error_text(err IError) string {
+	if err is json2.JsonDecodeError {
+		return '${err.message} at line ${err.line} column ${err.character}'
+	}
+	return err.msg()
 }
 
 // content_type returns the normalized request Content-Type
