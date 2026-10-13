@@ -27,7 +27,7 @@ pub fn swagger_ui(mut app router.App, mut ctx router.Context, params []string) v
 }
 
 const swagger_html = '<!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <title>v-http-apilab API</title>
